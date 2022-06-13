@@ -23,7 +23,7 @@ type PR = {
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  title = 'jamstack-sample-angular-node-spa';
+  title = 'uma-join';
   user = '';
   items: PR[] = [];
   lastUpdateAt?: Dayjs = undefined;
