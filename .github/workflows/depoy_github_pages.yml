@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [17.x]
     steps:      
       - run: echo "全てのブランチを clone"
       - uses: actions/checkout@v2
