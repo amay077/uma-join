@@ -35,9 +35,9 @@ jobs:
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: echo "SPA を生成"
-      - run: yarn --frozen-lockfile
+      - run: npm ci
         working-directory: ./spa
-      - run: yarn build-prod
+      - run: npm run build-prod
         working-directory: ./spa
           
       - run: echo "master ブランチに変更（GitHub Pages）"
