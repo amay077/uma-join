@@ -40,13 +40,13 @@ jobs:
       - run: npm run build-prod
         working-directory: ./spa
           
-      - run: echo "main ブランチに変更（GitHub Pages）"
-      - run: git checkout main --force
-      - run: echo "生成した SPA を main の docs にコピー"
+      - run: echo "publish ブランチに変更（GitHub Pages）"
+      - run: git checkout publish --force
+      - run: echo "生成した SPA を publish の docs にコピー"
       - run: rm -rf ./docs/*
       - run: cp ./spa/dist/prod/* ./docs
 
-      - run: echo "main へ push してサイト更新"
+      - run: echo "publish へ push してサイト更新"
       - run: git config --global user.email "bot@github.com"
       - run: git config --global user.name "BOT"
       - run: git add ./docs
