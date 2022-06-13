@@ -1,0 +1,21 @@
+<div class="jumbotron jumbotron-fluid">
+  <div class="container">
+    <h2 class="display-5">画像をよしなにがっちゃんこするサイト</h2>
+    <!-- <p class="lead">repository に送られたプルリクエストを新しい順に表示しています。</p> -->
+  </div>
+</div>
+
+<ngx-dropzone (change)="onSelect($event)">
+	<ngx-dropzone-label>Drop it, baby!</ngx-dropzone-label>
+  <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">
+    <ngx-dropzone-label>{{ f.name }} ({{ f.type }})</ngx-dropzone-label>
+  </ngx-dropzone-image-preview>
+</ngx-dropzone>
+
+<button style="margin-bottom: 10px;" (click)="onJoin()">がっちゃんこ</button>
+
+<div style="width: 500px; height: 1000px;">
+  <canvas #myCanvas id="canvas"></canvas>
+</div>
+
+<p>renketsu works!</p>
