@@ -3,7 +3,7 @@ name: PUBLISH TO GITHUB PAGES
 on:
   push:
     branches:
-      - development
+      - main
   schedule :
     - cron : '0 18 * * *' #UTC
 #    - cron : '0 3 * * *' JST
@@ -40,13 +40,13 @@ jobs:
       - run: npm run build-prod
         working-directory: ./spa
           
-      - run: echo "master ブランチに変更（GitHub Pages）"
-      - run: git checkout master --force
-      - run: echo "生成した SPA を master の docs にコピー"
+      - run: echo "main ブランチに変更（GitHub Pages）"
+      - run: git checkout main --force
+      - run: echo "生成した SPA を main の docs にコピー"
       - run: rm -rf ./docs/*
       - run: cp ./spa/dist/prod/* ./docs
 
-      - run: echo "master へ push してサイト更新"
+      - run: echo "main へ push してサイト更新"
       - run: git config --global user.email "bot@github.com"
       - run: git config --global user.name "BOT"
       - run: git add ./docs
