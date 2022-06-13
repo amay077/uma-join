@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule :
-    - cron : '0 18 * * *' #UTC
-#    - cron : '0 3 * * *' JST
+#     - cron : '0 18 * * *' #UTC
+# #    - cron : '0 3 * * *' JST
 
 defaults:
   run:
