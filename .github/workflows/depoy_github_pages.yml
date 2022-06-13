@@ -27,13 +27,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: v12.14.1
-      - run: echo "更新状況を取得して data.json を生成"
-      - run: yarn --frozen-lockfile
-        working-directory: ./tool
-      - run: yarn gen
-        working-directory: ./tool
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - run: echo "更新状況を取得して data.json を生成"
+      # - run: yarn --frozen-lockfile
+      #   working-directory: ./tool
+      # - run: yarn gen
+      #   working-directory: ./tool
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: echo "SPA を生成"
       - run: yarn --frozen-lockfile
         working-directory: ./spa
