@@ -159,9 +159,11 @@ export class RenketsuComponent implements OnInit {
 
   async onShare() {
     const canvas = this.myCanvas.nativeElement;
+    const dataURL = canvas.toDataURL("image/png");
+    const blob = toBlob(dataURL);
 
-    const blob = await canvasToBlob(canvas, 'image/png');
-    if (blob ==null) {
+    // const blob = await canvasToBlob(canvas, 'image/png');
+    if (blob == null) {
       console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
       return;
     }
@@ -180,3 +182,61 @@ export class RenketsuComponent implements OnInit {
     }
   }
 }
+
+
+// window.onload = () => {
+//   const canvas = document.getElementById("canvas");
+//   const context = canvas.getContext("2d");
+//   context.beginPath();
+//   context.rect(10, 10, 310, 230);
+//   context.fillStyle = "#0000FF";
+//   context.fill();
+//   context.closePath();
+
+//   document.getElementById("btnShare").onclick = () => {
+//     share();
+//   };
+// };
+
+// /**
+//  * 画像付きでWebページを共有する
+//  */
+// const share = () => {
+//   const canvas = document.getElementById("canvas");
+//   const dataURL = canvas.toDataURL("image/png");
+//   const blob = toBlob(dataURL);
+
+//   const imageFile = new File([blob], "image.png", {
+//     type: "image/png",
+//   });
+//   navigator.share({
+//     text: "共有テスト",
+//     url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+//     files: [imageFile],
+//   }).then(() => {
+//     console.log("共有成功.");
+//   }).catch((error) => {
+//     console.log(error);
+//   });
+// };
+
+/**
+ * Base64形式の画像データをBlobに変換する
+ * @param {String} base64 Base64形式の画像データ
+ * @returns {Blob} Blob形式の画像データ
+ */
+const toBlob = (base64: string) => {
+  const decodedData = atob(base64.replace(/^.*,/, ""));
+  const buffers = new Uint8Array(decodedData.length);
+  for (let i = 0; i < decodedData.length; i++) {
+    buffers[i] = decodedData.charCodeAt(i);
+  }
+  try {
+    const blob = new Blob([buffers.buffer], {
+      type: "image/png",
+    });
+    return blob;
+  } catch (e) {
+    return null;
+  }
+};
