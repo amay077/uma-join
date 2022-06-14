@@ -13,6 +13,7 @@
 </ngx-dropzone>
 
 <button style="margin-bottom: 10px;" (click)="onJoin()">がっちゃんこ!!</button>
+<button *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()">シェア</button>
 
 <div style="width: 500px; height: 1000px;">
   <canvas #myCanvas id="canvas"></canvas>

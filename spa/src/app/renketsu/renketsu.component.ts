@@ -140,4 +140,27 @@ export class RenketsuComponent implements OnInit {
 
       // }, 'image/png')
   }
+
+  get canShare(): boolean {
+    return navigator?.share != null;
+  }
+
+  onShare() {
+    const canvas = this.myCanvas.nativeElement;
+
+    canvas.toBlob(blob => {
+      const file = new File([blob!], 'test.png');
+      const nav = navigator as any;
+      nav.share({
+        text: "共有テスト",
+        url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+        files: [file],
+      }).then(() => {
+        console.log("共有成功.");
+      }).catch((error: any) => {
+        console.log(error);
+      });
+
+    }, 'image/png')
+  }
 }
