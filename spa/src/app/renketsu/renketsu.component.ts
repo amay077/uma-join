@@ -7,6 +7,7 @@ import { from } from 'linq';
   styleUrls: ['./renketsu.component.scss']
 })
 export class RenketsuComponent implements OnInit {
+  app_ver = (window as any)['app_ver'] ?? '';
 
   @ViewChild('myCanvas') myCanvas!: ElementRef<HTMLCanvasElement>;
 
