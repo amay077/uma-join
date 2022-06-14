@@ -81,7 +81,7 @@ export class RenketsuComponent implements OnInit {
   processing = false;
   progress = 0;
   imageSrc = '';
-  accuracy = '10';
+  accuracy = '12';
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
