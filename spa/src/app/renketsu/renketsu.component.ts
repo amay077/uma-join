@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, NgZone, OnInit, ViewChild } from '@angular/core';
 import { from, IEnumerable } from 'linq';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -30,7 +30,6 @@ async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8C
       context.drawImage(image, 0, 0);
 
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      console.log(`onJoin ~ imageData`, imageData);
       const data = imageData.data;
 
       const lineBytes = canvas.width * 4;
@@ -80,18 +79,25 @@ export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
   processing = false;
+  progress = 0;
   imageSrc = '';
   accuracy = '10';
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
 
-  constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService,) {
+  constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
 
     if (activatedRoute.snapshot.queryParamMap.has('eruda')) {
       const eruda = require('eruda');
       eruda.init();
+    }
+
+    const settingsStr = localStorage.getItem('settings');
+    if (settingsStr != null) {
+      const settingsJson = JSON.parse(settingsStr);
+      this.accuracy = settingsJson.accuracy;
     }
   }
 
@@ -99,12 +105,10 @@ export class RenketsuComponent implements OnInit {
   }
 
   onSelect(event: any) {
-    console.log(event);
     this.files.push(...event.addedFiles);
   }
 
   onRemove(event: any) {
-    console.log(event);
     this.files.splice(this.files.indexOf(event), 1);
   }
 
@@ -120,7 +124,9 @@ export class RenketsuComponent implements OnInit {
     this.imageSrc = '';
 
     try {
+      const start = new Date();
       const images = await Promise.all(this.files.map(file => loadImage(file)));
+      this.progress = 10;
 
       const isSameSize = from(images)
         .select(x => x.imageData)
@@ -172,13 +178,18 @@ export class RenketsuComponent implements OnInit {
       const averaves = [];
       const compareLinesA = from(image2.lines).skip(ignoreTopPx).take(compareLines).selectMany(x => from(x));
       const steps = Number(this.accuracy);
-      for( let i = 0; i < image1.lines.length - (ignoreBottomPx) - compareLines; i+=steps) {
+      const actualLineLen = image1.lines.length - (ignoreBottomPx) - compareLines;
+      for( let i = 0; i < actualLineLen; i+=steps) {
         const compareLinesB = from(image1.lines).skip(ignoreTopPx).skip(i).take(compareLines).selectMany(x => from(x));
 
         const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
           .select(([l,r]) => deltaE(l, r)).average();
         averaves.push({i, ave});
 
+        if (i % 10 == 0) {
+          this.progress = 10 + Math.ceil((i / actualLineLen) * 80);
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
       }
       const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
       const hitIndex = min.i;
@@ -204,6 +215,13 @@ export class RenketsuComponent implements OnInit {
 
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
+
+      localStorage.setItem('settings', JSON.stringify({ accuracy: this.accuracy }));
+      this.progress = 100;
+      const end = new Date();
+      const duration = end.getTime() - start.getTime();
+      console.log(`${this.constructor.name} ~ convert duration ${duration}ms`, );
+
     } catch (error) {
       console.log(`${this.constructor.name} ~ onJoin ~ error`, error);
     } finally {
