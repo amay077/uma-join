@@ -11,14 +11,6 @@
       "url": "http://localhost:4200/"
     },
     {
-      "name": "ng serve-ssl",
-      "type": "pwa-chrome",
-      "request": "launch",
-      "preLaunchTask": "npm: start-ssl",
-      "postDebugTask": "ng-kill",
-      "url": "http://localhost:4200/"
-    },
-    {
       "name": "ng test",
       "type": "chrome",
       "request": "launch",

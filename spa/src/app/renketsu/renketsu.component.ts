@@ -189,8 +189,7 @@ export class RenketsuComponent implements OnInit {
       const file = new File([blob], "image.png", { type });
       const nav = navigator as any;
       await nav.share({
-        text: "共有テスト",
-        url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+        text: "#umajoin",
         files: [file]
       });
       console.log("共有成功.");
