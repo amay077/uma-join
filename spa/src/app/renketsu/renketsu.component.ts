@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { from, IEnumerable } from 'linq';
 import { saveAs } from 'file-saver';
+import { ActivatedRoute, Router } from '@angular/router';
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   return new Promise<Blob | null>(resolve => {
@@ -76,9 +77,13 @@ function zip<T>(arrays: T[]): IEnumerable<any[]> {
 export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
-  constructor() {
-    const eruda = require('eruda');
-    eruda.init();
+  constructor(router: Router, activatedRoute: ActivatedRoute) {
+    router.routeReuseStrategy.shouldReuseRoute = () => false;
+
+    if (activatedRoute.snapshot.queryParamMap.has('eruda')) {
+      const eruda = require('eruda');
+      eruda.init();
+    }
   }
 
   ngOnInit(): void {
