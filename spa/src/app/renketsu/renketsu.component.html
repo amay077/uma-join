@@ -5,18 +5,33 @@
   </div>
 </div>
 
-<ngx-dropzone (change)="onSelect($event)">
-	<ngx-dropzone-label>Drop it, baby!</ngx-dropzone-label>
-  <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">
-    <ngx-dropzone-label>{{ f.name }} ({{ f.type }})</ngx-dropzone-label>
-  </ngx-dropzone-image-preview>
-</ngx-dropzone>
+<div class="container">
+  <div class="row">
+    <div class="col-12 mb-2">
+      <ngx-dropzone (change)="onSelect($event)">
+        <ngx-dropzone-label>Drop it, baby!</ngx-dropzone-label>
+        <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">
+          <!-- <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label> -->
+        </ngx-dropzone-image-preview>
+      </ngx-dropzone>
 
-<button style="margin-bottom: 10px;" (click)="onJoin()">がっちゃんこ!!</button>
-<button *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()">シェア</button>
+    </div>
+  </div>
 
-<div style="width: 500px; height: 1000px;">
-  <canvas #myCanvas id="canvas"></canvas>
+  <div class="row">
+    <div class="col-12 mb-2">
+      <button class="btn btn-lg btn-primary" style="margin-bottom: 10px;" (click)="onJoin()">がっちゃんこ!!</button>
+      <button class="btn btn-lg btn-primary ml-2" *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()">シェア</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div style="width: 500px; height: 1000px;">
+        <canvas #myCanvas id="canvas"></canvas>
+      </div>
+
+    </div>
+  </div>
+
 </div>
-
-<p>renketsu works!</p>
