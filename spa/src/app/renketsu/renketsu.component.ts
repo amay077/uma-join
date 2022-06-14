@@ -15,6 +15,7 @@ const topMarginPx = 0;
 const bottomMarginPx = 200;
 const leftMarginPx = 50;
 const rightMarginPx = 200;
+const compareLines = 300;
 
 async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> {
   return new Promise((r: any) => {
@@ -79,7 +80,7 @@ export class RenketsuComponent implements OnInit {
 
   processing = false;
   imageSrc = '';
-  accuracy = '4';
+  accuracy = '10';
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
@@ -126,19 +127,16 @@ export class RenketsuComponent implements OnInit {
     const sameTopPx = sameTopNum + topMarginPx;
     const sameBottomPx = sameLastNum + bottomMarginPx;
 
-    const top20lineA = from(image2.lines).skip(sameTopPx).take(200).selectMany(x => from(x)).toArray();
+    const compareLinesA = from(image2.lines).skip(sameTopPx).take(compareLines).selectMany(x => from(x));
     const averaves = [];
     const steps = Number(this.accuracy);
-    for( let i = 0; i < image1.lines.length - (sameBottomPx) - 300; i+=steps) {
-      const top20lineB = from(image1.lines).skip(sameTopPx).skip(i).take(100).selectMany(x => from(x)).toArray();
+    for( let i = 0; i < image1.lines.length - (sameBottomPx) - compareLines; i+=steps) {
+      const compareLinesB = from(image1.lines).skip(sameTopPx).skip(i).take(compareLines).selectMany(x => from(x));
 
-      const ave = from(top20lineA).zip(from(top20lineB), (l,r) => [l,r])
-      .select(([l,r]) => {
-
-        return Math.abs(l - r);
-      }).average();
-
+      const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
+        .select(([l,r]) => deltaE(l, r)).average();
       averaves.push({i, ave});
+
     }
     const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
     const hitIndex = min.i;
@@ -256,3 +254,37 @@ const toBlob = (base64: string) => {
     return null;
   }
 };
+
+function deltaE(rgbA: number[], rgbB: number[]): number {
+  let labA = rgb2lab(rgbA);
+  let labB = rgb2lab(rgbB);
+  let deltaL = labA[0] - labB[0];
+  let deltaA = labA[1] - labB[1];
+  let deltaB = labA[2] - labB[2];
+  let c1 = Math.sqrt(labA[1] * labA[1] + labA[2] * labA[2]);
+  let c2 = Math.sqrt(labB[1] * labB[1] + labB[2] * labB[2]);
+  let deltaC = c1 - c2;
+  let deltaH = deltaA * deltaA + deltaB * deltaB - deltaC * deltaC;
+  deltaH = deltaH < 0 ? 0 : Math.sqrt(deltaH);
+  let sc = 1.0 + 0.045 * c1;
+  let sh = 1.0 + 0.015 * c1;
+  let deltaLKlsl = deltaL / (1.0);
+  let deltaCkcsc = deltaC / (sc);
+  let deltaHkhsh = deltaH / (sh);
+  let i = deltaLKlsl * deltaLKlsl + deltaCkcsc * deltaCkcsc + deltaHkhsh * deltaHkhsh;
+  return i < 0 ? 0 : Math.sqrt(i);
+}
+
+function rgb2lab(rgb: number[]): [number, number, number] {
+  let r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255, x, y, z;
+  r = (r > 0.04045) ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+  g = (g > 0.04045) ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+  b = (b > 0.04045) ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+  x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+  y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+  z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+  x = (x > 0.008856) ? Math.pow(x, 1/3) : (7.787 * x) + 16/116;
+  y = (y > 0.008856) ? Math.pow(y, 1/3) : (7.787 * y) + 16/116;
+  z = (z > 0.008856) ? Math.pow(z, 1/3) : (7.787 * z) + 16/116;
+  return [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
+}
