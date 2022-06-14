@@ -119,6 +119,7 @@ export class RenketsuComponent implements OnInit {
       return;
     }
 
+    this.progress = 0;
     this.processing = true;
     this.imageBlob = null;
     this.imageSrc = '';
