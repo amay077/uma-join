@@ -3,6 +3,18 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "ng-kill",
+      "type": "shell",
+      "presentation": {
+        "echo": false,
+        "reveal": "never",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true
+      },
+      "command": "npx kill-port 4200"
+    },
+    {
       "type": "npm",
       "script": "start",
       "isBackground": true,

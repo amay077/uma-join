@@ -1,6 +1,14 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { from } from 'linq';
 
+function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
+  return new Promise<Blob | null>(resolve => {
+    canvas.toBlob(blob => {
+      resolve(blob)
+    }, type);
+  });
+}
+
 @Component({
   selector: 'app-renketsu',
   templateUrl: './renketsu.component.html',
@@ -11,7 +19,10 @@ export class RenketsuComponent implements OnInit {
 
   @ViewChild('myCanvas') myCanvas!: ElementRef<HTMLCanvasElement>;
 
-  constructor() { }
+  constructor() {
+    const eruda = require('eruda');
+    eruda.init();
+  }
 
   ngOnInit(): void {
 
@@ -143,25 +154,29 @@ export class RenketsuComponent implements OnInit {
   }
 
   get canShare(): boolean {
-    return navigator?.share != null;
+    return true;// navigator?.share != null;
   }
 
-  onShare() {
+  async onShare() {
     const canvas = this.myCanvas.nativeElement;
 
-    canvas.toBlob(blob => {
+    const blob = await canvasToBlob(canvas, 'image/png');
+    if (blob ==null) {
+      console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
+      return;
+    }
+
+    try {
       const file = new File([blob!], 'test.png');
       const nav = navigator as any;
-      nav.share({
+      await nav.share({
         text: "共有テスト",
         url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
-        files: [file],
-      }).then(() => {
-        console.log("共有成功.");
-      }).catch((error: any) => {
-        console.log(error);
+        files: [file]
       });
-
-    }, 'image/png')
+      console.log("共有成功.");
+    } catch (error) {
+      console.log(`${this.constructor.name} ~ onShare ~ error`, error);
+    }
   }
 }
