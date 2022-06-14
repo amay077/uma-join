@@ -7,6 +7,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RenketsuComponent } from './renketsu/renketsu.component';
 import { NgxDropzoneModule } from 'ngx-dropzone';
 import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';    // add
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -20,6 +22,11 @@ import { FormsModule } from '@angular/forms';
     HttpClientModule,
     NgbModule,
     NgxDropzoneModule,
+    BrowserAnimationsModule,
+    ToastrModule.forRoot({
+      preventDuplicates: true,
+      positionClass: 'toast-top-center',
+    }),
   ],
   providers: [],
   bootstrap: [AppComponent]

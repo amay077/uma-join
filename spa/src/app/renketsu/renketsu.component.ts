@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { from, IEnumerable } from 'linq';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   return new Promise<Blob | null>(resolve => {
@@ -85,7 +86,7 @@ export class RenketsuComponent implements OnInit {
   files: File[] = [];
   private imageBlob: Blob | null = null;
 
-  constructor(router: Router, activatedRoute: ActivatedRoute) {
+  constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService,) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
 
     if (activatedRoute.snapshot.queryParamMap.has('eruda')) {
@@ -109,61 +110,107 @@ export class RenketsuComponent implements OnInit {
 
   async onJoin() {
 
+    if (this.files.length != 2) {
+      this.toast.warning('画像ファイルを2つ選択してください');
+      return;
+    }
+
     this.processing = true;
     this.imageBlob = null;
     this.imageSrc = '';
 
-    const images = await Promise.all(this.files.map(file => loadImage(file)));
+    try {
+      const images = await Promise.all(this.files.map(file => loadImage(file)));
 
+      const isSameSize = from(images)
+        .select(x => x.imageData)
+        .pairwise((a,b) => a.width == b.width && a.height == b.height)
+        .all(x => x);
+      if (!isSameSize) {
+        this.toast.warning('画像ファイルは同じサイズにしてください');
+        return;
+      }
 
-    const zipedLines = zip(images.map(x => x.lines));
-    const sameTopNum = zipedLines.takeWhile((arr) => bytesEquals(arr)).count();
-    const sameLastNum = zipedLines.reverse().takeWhile((arr) => bytesEquals(arr)).count();
+      const zipedLines = zip(images.map(x => x.lines));
+      const sameTopNum = zipedLines.takeWhile((arr) => bytesEquals(arr)).count();
+      const sameLastNum = zipedLines.reverse().takeWhile((arr) => bytesEquals(arr)).count();
 
-    const image1 = images[0];
-    const image2 = images[1];
+      const ignoreTopPx = sameTopNum + topMarginPx;
+      const ignoreBottomPx = sameLastNum + bottomMarginPx;
 
+      // const results = [];
+      // for (let i = 0; i < images.length; i++) {
+      //   for (let j = 0; j < images.length; j++) {
+      //     if (i == j) {
+      //       continue;
+      //     }
 
-    const sameTopPx = sameTopNum + topMarginPx;
-    const sameBottomPx = sameLastNum + bottomMarginPx;
+      //     const averaves = [];
+      //     const compareLinesA = from(images[i].lines).skip(ignoreTopPx).take(compareLines).selectMany(x => from(x));
+      //     const steps = Number(this.accuracy);
+      //     for( let i = 0; i < images[j].lines.length - (ignoreBottomPx) - compareLines; i+=steps) {
+      //       const compareLinesB = from(images[j].lines).skip(ignoreTopPx).skip(i).take(compareLines).selectMany(x => from(x));
 
-    const compareLinesA = from(image2.lines).skip(sameTopPx).take(compareLines).selectMany(x => from(x));
-    const averaves = [];
-    const steps = Number(this.accuracy);
-    for( let i = 0; i < image1.lines.length - (sameBottomPx) - compareLines; i+=steps) {
-      const compareLinesB = from(image1.lines).skip(sameTopPx).skip(i).take(compareLines).selectMany(x => from(x));
+      //       const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
+      //         .select(([l,r]) => deltaE(l, r)).average();
+      //       averaves.push({i, ave});
 
-      const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
-        .select(([l,r]) => deltaE(l, r)).average();
-      averaves.push({i, ave});
+      //     }
+      //     const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
+      //     results.push({ i, j, min });
+      //   }
+      // }
 
+      // const ord = from(results).orderBy(x => x.min.ave).toArray();
+
+      // const image1 = images[ord[0].i];
+      // const image2 = images[ord[1].i];
+      // const hitIndex = ord[1].min.i;
+
+      const image1 = images[0];
+      const image2 = images[1];
+      const averaves = [];
+      const compareLinesA = from(image2.lines).skip(ignoreTopPx).take(compareLines).selectMany(x => from(x));
+      const steps = Number(this.accuracy);
+      for( let i = 0; i < image1.lines.length - (ignoreBottomPx) - compareLines; i+=steps) {
+        const compareLinesB = from(image1.lines).skip(ignoreTopPx).skip(i).take(compareLines).selectMany(x => from(x));
+
+        const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
+          .select(([l,r]) => deltaE(l, r)).average();
+        averaves.push({i, ave});
+
+      }
+      const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
+      const hitIndex = min.i;
+
+      const imageWid = image1.imageData.width;
+      const imageHei = image1.imageData.height;
+
+      const contentHeight = imageHei - (ignoreTopPx + ignoreBottomPx);
+      const outputHeight = ignoreTopPx + hitIndex + contentHeight + ignoreBottomPx;
+      const canvas = document.createElement('canvas');
+      canvas.setAttribute('width', `${imageWid}px`);
+      canvas.setAttribute('height', `${outputHeight}px`);
+      const context = canvas.getContext('2d')!;
+
+      const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
+        context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
+      };
+
+      drawImage(context, image1.imageData, { x: 0, y: 0 }, { left: 0, top: 0, width: imageWid, height: ignoreTopPx });
+      drawImage(context, image1.imageData, { x: 0, y: ignoreTopPx }, { left: 0, top: ignoreTopPx, width: imageWid, height: hitIndex });
+      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex }, { left: 0, top: ignoreTopPx, width: imageWid, height: contentHeight });
+      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - ignoreBottomPx, width: imageWid, height: ignoreBottomPx });
+
+      this.imageSrc = canvas.toDataURL('image/png');
+      this.imageBlob = await canvasToBlob(canvas, 'image/png');
+    } catch (error) {
+      console.log(`${this.constructor.name} ~ onJoin ~ error`, error);
+    } finally {
+      this.processing = false;
     }
-    const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
-    const hitIndex = min.i;
 
-    const imageWid = image1.imageData.width;
-    const imageHei = image1.imageData.height;
 
-    const contentHeight = imageHei - (sameTopPx + sameBottomPx);
-    const outputHeight = sameTopPx + hitIndex + contentHeight + sameBottomPx;
-    const canvas = document.createElement('canvas');
-    // const canvas = this.myCanvas.nativeElement;
-    canvas.setAttribute('width', `${imageWid}px`);
-    canvas.setAttribute('height', `${outputHeight}px`);
-    const context = canvas.getContext('2d')!;
-
-    const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
-      context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
-    };
-
-    drawImage(context, image1.imageData, { x: 0, y: 0 }, { left: 0, top: 0, width: imageWid, height: sameTopPx });
-    drawImage(context, image1.imageData, { x: 0, y: sameTopPx }, { left: 0, top: sameTopPx, width: imageWid, height: hitIndex });
-    drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex }, { left: 0, top: sameTopPx, width: imageWid, height: contentHeight });
-    drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - sameBottomPx, width: imageWid, height: sameBottomPx });
-
-    this.imageSrc = canvas.toDataURL('image/png');
-    this.imageBlob = await canvasToBlob(canvas, 'image/png');
-    this.processing = false;
   }
 
   get canShare(): boolean {

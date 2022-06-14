@@ -32,6 +32,7 @@
     "kill-port": "^2.0.0",
     "linq": "3.2.2",
     "ngx-dropzone": "^3.1.0",
+    "ngx-toastr": "^14.3.0",
     "pngjs": "^6.0.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",

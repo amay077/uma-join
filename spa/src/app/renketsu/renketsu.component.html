@@ -20,7 +20,7 @@
 
   <div class="row">
 
-    <div class="col-md-12 col-12 mb-2">
+    <div class="col-md-12 col-12 mb-3">
       <select class="form-control" [(ngModel)]="accuracy">
         <option value="30">1 - 速度が少し上がるが、精度がすごく下がる</option>
         <option value="20">2 - 速度がわずかに上がるが、精度が少し下がる</option>
@@ -31,14 +31,14 @@
 
     </div>
 
-    <div class="col-md-4 col-12 mb-2">
+    <div class="col-md-4 col-12 mb-3">
       <button *ngIf="!processing" class="btn btn-lg btn-block btn-primary" style="margin-bottom: 10px;" [disabled]="files.length < 2" (click)="onJoin()"><i class="fa fa-play" aria-hidden="true"></i>&nbsp;がっちゃんこ!!</button>
       <label *ngIf="processing" >Processing...</label>
     </div>
-    <div class="col-md-4 col-12 mb-2">
+    <div class="col-md-4 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" style="margin-bottom: 10px;" (click)="onDownload()"><i class="fa fa-download" aria-hidden="true"></i>&nbsp;ダウンロード</button>
     </div>
-    <div class="col-md-4 col-12 mb-2">
+    <div class="col-md-4 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;シェア</button>
     </div>
   </div>
