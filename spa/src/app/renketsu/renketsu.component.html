@@ -1,13 +1,13 @@
 <div class="jumbotron jumbotron-fluid">
   <div class="container">
-    <h2 class="display-5">画像をよしなにがっちゃんこするサイト</h2>
-    <p class="lead">{{app_ver}}</p>
+    <h2 class="display-5">ウマ画像連結ツール</h2>
+    <p class="lead">Ver: {{app_ver}}</p>
   </div>
 </div>
 
 <div class="container">
   <div class="row">
-    <div class="col-12 mb-2">
+    <div class="col-12 mb-4">
       <ngx-dropzone (change)="onSelect($event)">
         <ngx-dropzone-label>Drop it, baby!</ngx-dropzone-label>
         <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">

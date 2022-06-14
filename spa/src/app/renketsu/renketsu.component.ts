@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { from, IEnumerable } from 'linq';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -77,6 +77,12 @@ function zip<T>(arrays: T[]): IEnumerable<any[]> {
 export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
+  processing = false;
+  imageSrc = '';
+
+  files: File[] = [];
+  private imageBlob: Blob | null = null;
+
   constructor(router: Router, activatedRoute: ActivatedRoute) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
 
@@ -89,8 +95,6 @@ export class RenketsuComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  files: File[] = [];
-
   onSelect(event: any) {
     console.log(event);
     this.files.push(...event.addedFiles);
@@ -101,9 +105,6 @@ export class RenketsuComponent implements OnInit {
     this.files.splice(this.files.indexOf(event), 1);
   }
 
-  processing = false;
-
-  imageSrc = '';
   async onJoin() {
 
     this.processing = true;
@@ -149,10 +150,6 @@ export class RenketsuComponent implements OnInit {
     canvas.setAttribute('height', `${outputHeight}px`);
     const context = canvas.getContext('2d')!;
 
-    context.clearRect(0, 0, 400, 400);
-    context.fillStyle = '#ff0000';
-    context.fillRect(0, 0, 100, 200);
-
     const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
       context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
     };
@@ -163,6 +160,7 @@ export class RenketsuComponent implements OnInit {
     drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - sameBottomPx, width: imageWid, height: sameBottomPx });
 
     this.imageSrc = canvas.toDataURL('image/png');
+    this.imageBlob = await canvasToBlob(canvas, 'image/png');
     this.processing = false;
   }
 
@@ -177,7 +175,7 @@ export class RenketsuComponent implements OnInit {
     const type = 'image/png';
     // const canvas = this.myCanvas.nativeElement;
     // const blob = await canvasToBlob(canvas, type);
-    const blob = toBlob(this.imageSrc);
+    const blob = this.imageBlob;
     if (blob == null) {
       console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
       return;
@@ -199,10 +197,7 @@ export class RenketsuComponent implements OnInit {
 
   async onDownload() {
 
-    const type = 'image/png';
-    // const canvas = this.myCanvas.nativeElement;
-    // const blob = await canvasToBlob(canvas, type);
-    const blob = toBlob(this.imageSrc);
+    const blob = this.imageBlob;
     if (blob == null) {
       console.log(`${this.constructor.name} ~ onDownload ~ blob is null`);
       return;
