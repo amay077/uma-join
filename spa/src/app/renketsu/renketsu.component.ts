@@ -9,6 +9,45 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | n
   });
 }
 
+const topMarginPx = 0;
+const bottomMarginPx = 200;
+const leftMarginPx = 200;
+const rightMarginPx = 500;
+
+async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> {
+  return new Promise((r: any) => {
+    const image = new Image();
+    image.onload = async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      const context = canvas.getContext('2d')!;
+      context.drawImage(image, 0, 0);
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      console.log(`onJoin ~ imageData`, imageData);
+      const data = imageData.data;
+
+      const lineBytes = canvas.width * 4;
+      const rows = data.length / lineBytes;
+
+      const leftMarginBytes = leftMarginPx * 4;
+      const rightMarginBytes = rightMarginPx * 4;
+
+      const lines = [];
+      for (let row = topMarginPx; row < rows - (bottomMarginPx); row++) {
+        const start = row * lineBytes + (leftMarginBytes);
+        const end = start + lineBytes - (leftMarginBytes + rightMarginBytes);
+        const line = data.subarray(start, end);
+        lines.push(line);
+      }
+      r({ imageData, lines});
+    };
+    image.src = URL.createObjectURL(f);
+  });
+}
+
 @Component({
   selector: 'app-renketsu',
   templateUrl: './renketsu.component.html',
@@ -42,46 +81,8 @@ export class RenketsuComponent implements OnInit {
 
   async onJoin() {
 
-    const topMarginPx = 0;
-    const bottomMarginPx = 200;
-    const leftMarginPx = 200;
-    const rightMarginPx = 500;
-
-    const loadLines: (f: File)=>Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> = (f) =>
-      new Promise((r: any) => {
-        const image = new Image();
-        image.onload = async () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = image.width;
-          canvas.height = image.height;
-
-          const context = canvas.getContext('2d')!;
-          context.drawImage(image, 0, 0);
-
-          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-          console.log(`${this.constructor.name} ~ onJoin ~ imageData`, imageData);
-          const data = imageData.data;
-
-          const lineBytes = canvas.width * 4;
-          const rows = data.length / lineBytes;
-
-          const leftMarginBytes = leftMarginPx * 4;
-          const rightMarginBytes = rightMarginPx * 4;
-
-          const lines = [];
-          for (let row = topMarginPx; row < rows - (bottomMarginPx); row++) {
-            const start = row * lineBytes + (leftMarginBytes);
-            const end = start + lineBytes - (leftMarginBytes + rightMarginBytes);
-            const line = data.subarray(start, end);
-            lines.push(line);
-          }
-          r({ imageData, lines});
-        };
-        image.src = URL.createObjectURL(f);
-      });
-
-      const image1 = await loadLines(this.files[0]);
-      const image2 = await loadLines(this.files[1]);
+      const image1 = await loadImage(this.files[0]);
+      const image2 = await loadImage(this.files[1]);
 
       const bytesEquals = (a: Uint8ClampedArray, b: Uint8ClampedArray) => {
         return from(a).zip(b, (l, r) => ({l, r})).all(({l,r}) => l ==r);
@@ -154,10 +155,13 @@ export class RenketsuComponent implements OnInit {
   }
 
   get canShare(): boolean {
-    return true;// navigator?.share != null;
+    return navigator?.share != null;
   }
 
   async onShare() {
+    // share();
+    // return;
+
     const type = 'image/png';
     const canvas = this.myCanvas.nativeElement;
     const blob = await canvasToBlob(canvas, type);
@@ -180,3 +184,47 @@ export class RenketsuComponent implements OnInit {
     }
   }
 }
+
+
+/**
+ * 画像付きでWebページを共有する
+ */
+ const share = () => {
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  const dataURL = canvas.toDataURL("image/png");
+  const blob = toBlob(dataURL)!;
+
+  const imageFile = new File([blob], "image.png", {
+    type: "image/png",
+  });
+  (navigator as any).share({
+    text: "共有テスト",
+    url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+    files: [imageFile],
+  }).then(() => {
+    console.log("共有成功.");
+  }).catch((error: any) => {
+    console.log(error);
+  });
+};
+
+/**
+ * Base64形式の画像データをBlobに変換する
+ * @param {String} base64 Base64形式の画像データ
+ * @returns {Blob} Blob形式の画像データ
+ */
+const toBlob = (base64: string) => {
+  const decodedData = atob(base64.replace(/^.*,/, ""));
+  const buffers = new Uint8Array(decodedData.length);
+  for (let i = 0; i < decodedData.length; i++) {
+    buffers[i] = decodedData.charCodeAt(i);
+  }
+  try {
+    const blob = new Blob([buffers.buffer], {
+      type: "image/png",
+    });
+    return blob;
+  } catch (e) {
+    return null;
+  }
+};
