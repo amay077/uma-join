@@ -19,18 +19,21 @@
   </div>
 
   <div class="row">
-    <div class="col-12 mb-2">
-      <button class="btn btn-lg btn-primary" style="margin-bottom: 10px;" (click)="onJoin()">がっちゃんこ!!</button>
-      <button class="btn btn-lg btn-primary ml-2" *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()">シェア</button>
+    <div class="col-md-4 col-12 mb-2">
+      <button *ngIf="!processing" class="btn btn-lg btn-block btn-primary" style="margin-bottom: 10px;" [disabled]="files.length < 2" (click)="onJoin()">がっちゃんこ!!</button>
+      <label *ngIf="processing" >Processing...</label>
+    </div>
+    <div class="col-md-4 col-12 mb-2">
+      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" style="margin-bottom: 10px;" (click)="onDownload()">ダウンロード</button>
+    </div>
+    <div class="col-md-4 col-12 mb-2">
+      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()">シェア</button>
     </div>
   </div>
 
   <div class="row">
     <div class="col-12">
-      <div style="width: 500px; height: 1000px;">
-        <canvas #myCanvas id="canvas"></canvas>
-      </div>
-
+      <img class="w-100" [src]="imageSrc">
     </div>
   </div>
 

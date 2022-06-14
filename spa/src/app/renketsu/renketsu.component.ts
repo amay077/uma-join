@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { from } from 'linq';
+import { from, IEnumerable } from 'linq';
+import { saveAs } from 'file-saver';
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
   return new Promise<Blob | null>(resolve => {
@@ -12,7 +13,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | n
 const topMarginPx = 0;
 const bottomMarginPx = 200;
 const leftMarginPx = 200;
-const rightMarginPx = 500;
+const rightMarginPx = 200;
 
 async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> {
   return new Promise((r: any) => {
@@ -48,6 +49,25 @@ async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8C
   });
 }
 
+function bytesEquals(a: Uint8ClampedArray[]): boolean {
+  return zip(a).all((arr) => eq(arr));
+};
+
+function eq(arr: any[]): boolean {
+  return from(arr).pairwise((a, b) => a == b).all(x => x)
+}
+
+function zip<T>(arrays: T[]): IEnumerable<any[]> {
+
+  const bufA = from(arrays[0]);
+  let bufX = bufA.select(x => [x]);
+  for (const bufY of arrays.slice(1)) {
+    bufX = bufX.zip(bufY, (a: T[], b: T) => [...a, b]);
+  }
+
+  return bufX;
+}
+
 @Component({
   selector: 'app-renketsu',
   templateUrl: './renketsu.component.html',
@@ -56,15 +76,12 @@ async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8C
 export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
-  @ViewChild('myCanvas') myCanvas!: ElementRef<HTMLCanvasElement>;
-
   constructor() {
     const eruda = require('eruda');
     eruda.init();
   }
 
   ngOnInit(): void {
-
   }
 
   files: File[] = [];
@@ -79,79 +96,69 @@ export class RenketsuComponent implements OnInit {
     this.files.splice(this.files.indexOf(event), 1);
   }
 
+  processing = false;
+
+  imageSrc = '';
   async onJoin() {
 
-      const image1 = await loadImage(this.files[0]);
-      const image2 = await loadImage(this.files[1]);
+    this.processing = true;
 
-      const bytesEquals = (a: Uint8ClampedArray, b: Uint8ClampedArray) => {
-        return from(a).zip(b, (l, r) => ({l, r})).all(({l,r}) => l ==r);
-      };
+    const images = await Promise.all(this.files.map(file => loadImage(file)));
 
-      const sameTopNum = from(image1.lines).zip(image2.lines, (l, r) => ({ l, r })).takeWhile((x) => bytesEquals(x.l, x.r)).count();
-      const sameLastNum = from(image1.lines).zip(image2.lines, (l, r) => ({ l, r })).reverse().takeWhile((x) => bytesEquals(x.l, x.r)).count();
-      const sameTopPx = sameTopNum + topMarginPx;
-      const sameBottomPx = sameLastNum + bottomMarginPx;
 
-      const top20lineA = from(image2.lines).skip(sameTopPx).take(100).selectMany(x => from(x)).toArray();
-      const averaves = [];
-      for( let i = 0; i < image1.lines.length - (sameBottomPx) - 100; i++) {
-        const top20lineB = from(image1.lines).skip(sameTopPx).skip(i).take(100).selectMany(x => from(x)).toArray();
+    const zipedLines = zip(images.map(x => x.lines));
+    const sameTopNum = zipedLines.takeWhile((arr) => bytesEquals(arr)).count();
+    const sameLastNum = zipedLines.reverse().takeWhile((arr) => bytesEquals(arr)).count();
 
-        const ave = from(top20lineA).zip(from(top20lineB), (l,r) => ({l,r}))
-        .select(({l , r}) => {
+    const image1 = images[0];
+    const image2 = images[1];
 
-          return Math.abs(l - r);
-        }).average();
 
-        averaves.push({i, ave});
-        // if (ave < 3) {
-        //   hitIndex = i;
-        //   break;
-        // }
-      }
-      // console.log(`${this.constructor.name} ~ onJoin ~ sameTop`, sameTopPx, sameBottomPx);
-      const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy( x => x.ave);
-      const hitIndex = min.i;
+    const sameTopPx = sameTopNum + topMarginPx;
+    const sameBottomPx = sameLastNum + bottomMarginPx;
 
-      const imageWid = image1.imageData.width;
-      const imageHei = image1.imageData.height;
+    const top20lineA = from(image2.lines).skip(sameTopPx).take(200).selectMany(x => from(x)).toArray();
+    const averaves = [];
+    for( let i = 0; i < image1.lines.length - (sameBottomPx) - 200; i+=20) {
+      const top20lineB = from(image1.lines).skip(sameTopPx).skip(i).take(100).selectMany(x => from(x)).toArray();
 
-      const contentHeight = imageHei - (sameTopPx + sameBottomPx);
-      const outputHeight = sameTopPx + hitIndex + contentHeight + sameBottomPx;
-      const canvas = this.myCanvas.nativeElement;
-      canvas.setAttribute('width', `${imageWid}px`);
-      canvas.setAttribute('height', `${outputHeight}px`);
-      const context = canvas.getContext('2d')!;
+      const ave = from(top20lineA).zip(from(top20lineB), (l,r) => [l,r])
+      .select(([l,r]) => {
 
-      context.clearRect(0, 0, 400, 400);
-      context.fillStyle = '#ff0000';
-      context.fillRect(0, 0, 100, 200);
+        return Math.abs(l - r);
+      }).average();
 
-      const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
-        context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
-      };
+      averaves.push({i, ave});
+    }
+    const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
+    const hitIndex = min.i;
 
-      let dst = {x: 0, y: 0};
-      let src = {x: 0, y: 0, wid: imageWid, hei: sameTopPx};
-      drawImage(context, image1.imageData, { x: 0, y: 0 }, { left: 0, top: 0, width: imageWid, height: sameTopPx });
-      drawImage(context, image1.imageData, { x: 0, y: sameTopPx }, { left: 0, top: sameTopPx, width: imageWid, height: hitIndex });
-      drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex }, { left: 0, top: sameTopPx, width: imageWid, height: contentHeight });
-      drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - sameBottomPx, width: imageWid, height: sameBottomPx });
+    const imageWid = image1.imageData.width;
+    const imageHei = image1.imageData.height;
 
-      // canvas.toBlob(blob => {
-      //   const file = new File([blob!], 'test.png');
-      //   navigator.share({
-      //     text: "共有テスト",
-      //     url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
-      //     files: [file],
-      //   }).then(() => {
-      //     console.log("共有成功.");
-      //   }).catch((error) => {
-      //     console.log(error);
-      //   });
+    const contentHeight = imageHei - (sameTopPx + sameBottomPx);
+    const outputHeight = sameTopPx + hitIndex + contentHeight + sameBottomPx;
+    const canvas = document.createElement('canvas');
+    // const canvas = this.myCanvas.nativeElement;
+    canvas.setAttribute('width', `${imageWid}px`);
+    canvas.setAttribute('height', `${outputHeight}px`);
+    const context = canvas.getContext('2d')!;
 
-      // }, 'image/png')
+    context.clearRect(0, 0, 400, 400);
+    context.fillStyle = '#ff0000';
+    context.fillRect(0, 0, 100, 200);
+
+    const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
+      context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
+    };
+
+    drawImage(context, image1.imageData, { x: 0, y: 0 }, { left: 0, top: 0, width: imageWid, height: sameTopPx });
+    drawImage(context, image1.imageData, { x: 0, y: sameTopPx }, { left: 0, top: sameTopPx, width: imageWid, height: hitIndex });
+    drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex }, { left: 0, top: sameTopPx, width: imageWid, height: contentHeight });
+    drawImage(context, image2.imageData, { x: 0, y: sameTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - sameBottomPx, width: imageWid, height: sameBottomPx });
+
+    this.imageSrc = canvas.toDataURL('image/png');
+    this.processing = false;
   }
 
   get canShare(): boolean {
@@ -163,8 +170,9 @@ export class RenketsuComponent implements OnInit {
     // return;
 
     const type = 'image/png';
-    const canvas = this.myCanvas.nativeElement;
-    const blob = await canvasToBlob(canvas, type);
+    // const canvas = this.myCanvas.nativeElement;
+    // const blob = await canvasToBlob(canvas, type);
+    const blob = toBlob(this.imageSrc);
     if (blob == null) {
       console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
       return;
@@ -179,6 +187,24 @@ export class RenketsuComponent implements OnInit {
         files: [file]
       });
       console.log("共有成功.");
+    } catch (error) {
+      console.log(`${this.constructor.name} ~ onShare ~ error`, error);
+    }
+  }
+
+  async onDownload() {
+
+    const type = 'image/png';
+    // const canvas = this.myCanvas.nativeElement;
+    // const blob = await canvasToBlob(canvas, type);
+    const blob = toBlob(this.imageSrc);
+    if (blob == null) {
+      console.log(`${this.constructor.name} ~ onDownload ~ blob is null`);
+      return;
+    }
+
+    try {
+      saveAs(blob, `image-${new Date().toISOString()}.png`);
     } catch (error) {
       console.log(`${this.constructor.name} ~ onShare ~ error`, error);
     }
