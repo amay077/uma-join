@@ -158,28 +158,29 @@ export class RenketsuComponent implements OnInit {
   }
 
   async onShare() {
-    const canvas = this.myCanvas.nativeElement;
-    const dataURL = canvas.toDataURL("image/png");
-    const blob = toBlob(dataURL);
+    share();
+    // const canvas = this.myCanvas.nativeElement;
+    // const dataURL = canvas.toDataURL("image/png");
+    // const blob = toBlob(dataURL);
 
-    // const blob = await canvasToBlob(canvas, 'image/png');
-    if (blob == null) {
-      console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
-      return;
-    }
+    // // const blob = await canvasToBlob(canvas, 'image/png');
+    // if (blob == null) {
+    //   console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
+    //   return;
+    // }
 
-    try {
-      const file = new File([blob!], 'test.png');
-      const nav = navigator as any;
-      await nav.share({
-        text: "共有テスト",
-        url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
-        files: [file]
-      });
-      console.log("共有成功.");
-    } catch (error) {
-      console.log(`${this.constructor.name} ~ onShare ~ error`, error);
-    }
+    // try {
+    //   const file = new File([blob!], 'test.png');
+    //   const nav = navigator as any;
+    //   await nav.share({
+    //     text: "共有テスト",
+    //     url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+    //     files: [file]
+    //   });
+    //   console.log("共有成功.");
+    // } catch (error) {
+    //   console.log(`${this.constructor.name} ~ onShare ~ error`, error);
+    // }
   }
 }
 
@@ -198,27 +199,27 @@ export class RenketsuComponent implements OnInit {
 //   };
 // };
 
-// /**
-//  * 画像付きでWebページを共有する
-//  */
-// const share = () => {
-//   const canvas = document.getElementById("canvas");
-//   const dataURL = canvas.toDataURL("image/png");
-//   const blob = toBlob(dataURL);
+/**
+ * 画像付きでWebページを共有する
+ */
+const share = () => {
+  const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  const dataURL = canvas.toDataURL("image/png");
+  const blob = toBlob(dataURL)!;
 
-//   const imageFile = new File([blob], "image.png", {
-//     type: "image/png",
-//   });
-//   navigator.share({
-//     text: "共有テスト",
-//     url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
-//     files: [imageFile],
-//   }).then(() => {
-//     console.log("共有成功.");
-//   }).catch((error) => {
-//     console.log(error);
-//   });
-// };
+  const imageFile = new File([blob], "image.png", {
+    type: "image/png",
+  });
+  (navigator as any).share({
+    text: "共有テスト",
+    url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+    files: [imageFile],
+  }).then(() => {
+    console.log("共有成功.");
+  }).catch((error: any) => {
+    console.log(error);
+  });
+};
 
 /**
  * Base64形式の画像データをBlobに変換する
