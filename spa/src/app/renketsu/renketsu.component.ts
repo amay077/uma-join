@@ -228,8 +228,7 @@ export class RenketsuComponent implements OnInit {
     type: "image/png",
   });
   (navigator as any).share({
-    text: "共有テスト",
-    url: "https://codepen.io/de_teiu_tkg/pen/dyWaaNP",
+    text: "#umajoin",
     files: [imageFile],
   }).then(() => {
     console.log("共有成功.");
