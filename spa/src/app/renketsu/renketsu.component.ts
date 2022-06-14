@@ -255,6 +255,7 @@ const toBlob = (base64: string) => {
   }
 };
 
+// https://stackoverflow.com/a/52453462
 function deltaE(rgbA: number[], rgbB: number[]): number {
   let labA = rgb2lab(rgbA);
   let labB = rgb2lab(rgbB);
