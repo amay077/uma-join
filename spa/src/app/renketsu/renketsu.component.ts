@@ -13,7 +13,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | n
 
 const topMarginPx = 0;
 const bottomMarginPx = 200;
-const leftMarginPx = 200;
+const leftMarginPx = 50;
 const rightMarginPx = 200;
 
 async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> {
@@ -79,6 +79,7 @@ export class RenketsuComponent implements OnInit {
 
   processing = false;
   imageSrc = '';
+  accuracy = '4';
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
@@ -108,6 +109,8 @@ export class RenketsuComponent implements OnInit {
   async onJoin() {
 
     this.processing = true;
+    this.imageBlob = null;
+    this.imageSrc = '';
 
     const images = await Promise.all(this.files.map(file => loadImage(file)));
 
@@ -125,7 +128,8 @@ export class RenketsuComponent implements OnInit {
 
     const top20lineA = from(image2.lines).skip(sameTopPx).take(200).selectMany(x => from(x)).toArray();
     const averaves = [];
-    for( let i = 0; i < image1.lines.length - (sameBottomPx) - 200; i+=20) {
+    const steps = Number(this.accuracy);
+    for( let i = 0; i < image1.lines.length - (sameBottomPx) - 300; i+=steps) {
       const top20lineB = from(image1.lines).skip(sameTopPx).skip(i).take(100).selectMany(x => from(x)).toArray();
 
       const ave = from(top20lineA).zip(from(top20lineB), (l,r) => [l,r])

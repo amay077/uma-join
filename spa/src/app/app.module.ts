@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RenketsuComponent } from './renketsu/renketsu.component';
 import { NgxDropzoneModule } from 'ngx-dropzone';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -14,6 +15,7 @@ import { NgxDropzoneModule } from 'ngx-dropzone';
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     AppRoutingModule,
     HttpClientModule,
     NgbModule,

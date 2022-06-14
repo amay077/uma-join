@@ -19,6 +19,18 @@
   </div>
 
   <div class="row">
+
+    <div class="col-md-4 col-12 mb-2">
+      <select class="form-control" [(ngModel)]="accuracy">
+        <option value="10">1 - 速度が少し上がるが、精度がすごく下がる</option>
+        <option value="7">2 - 速度がわずかに上がるが、精度が少し下がる</option>
+        <option value="4">3 - 普通の速度と精度</option>
+        <option value="2">4 - 速度が少し下がるが、精度がわずかに上がる</option>
+        <option value="1">5 - 速度がすごく下がるが、精度が少し上がる</option>
+      </select>
+
+    </div>
+
     <div class="col-md-4 col-12 mb-2">
       <button *ngIf="!processing" class="btn btn-lg btn-block btn-primary" style="margin-bottom: 10px;" [disabled]="files.length < 2" (click)="onJoin()">がっちゃんこ!!</button>
       <label *ngIf="processing" >Processing...</label>
