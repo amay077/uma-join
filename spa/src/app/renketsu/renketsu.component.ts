@@ -1,75 +1,40 @@
-import { Component, NgZone, OnInit, ViewChild } from '@angular/core';
-import { from, IEnumerable } from 'linq';
+import { Component, NgZone, OnInit } from '@angular/core';
+import { from } from 'linq';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { RGBA } from './func/types';
+import { deltaE } from './func/color-diff';
+import { drawImage, getPixelsFromRect, loadImage, canvasToBlob } from './func/image-func';
 
-function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob | null> {
-  return new Promise<Blob | null>(resolve => {
-    canvas.toBlob(blob => {
-      resolve(blob)
-    }, type);
-  });
-}
-
-const topMarginPx = 0;
-const bottomMarginPx = 200;
-const leftMarginPx = 50;
-const rightMarginPx = 200;
-const compareLines = 300;
-
-async function loadImage(f: File): Promise<{ imageData: ImageData, lines: Uint8ClampedArray[]}> {
-  return new Promise((r: any) => {
-    const image = new Image();
-    image.onload = async () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = image.width;
-      canvas.height = image.height;
-
-      const context = canvas.getContext('2d')!;
-      context.drawImage(image, 0, 0);
-
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      const lineBytes = canvas.width * 4;
-      const rows = data.length / lineBytes;
-
-      const leftMarginBytes = leftMarginPx * 4;
-      const rightMarginBytes = rightMarginPx * 4;
-
-      const lines = [];
-      for (let row = topMarginPx; row < rows - (bottomMarginPx); row++) {
-        const start = row * lineBytes + (leftMarginBytes);
-        const end = start + lineBytes - (leftMarginBytes + rightMarginBytes);
-        const line = data.subarray(start, end);
-        lines.push(line);
-      }
-      r({ imageData, lines});
-    };
-    image.src = URL.createObjectURL(f);
-  });
-}
-
-function bytesEquals(a: Uint8ClampedArray[]): boolean {
-  return zip(a).all((arr) => eq(arr));
+const fixedImageWidthPx = 500;
+const margin = {
+  top: 100,
+  left: 20,
+  right: 300,
+  bottom: 100
 };
+const compareLines = 30;
+const deltaTolerance = 30;
 
-function eq(arr: any[]): boolean {
-  return from(arr).pairwise((a, b) => a == b).all(x => x)
-}
+const isEqualPixels = (a: RGBA[][], b: RGBA[][], tolerance: number): boolean => {
+  for (let i = 0; i < a.length; i++) {
+    const la = a[i];
+    const lb = b[i];
 
-function zip<T>(arrays: T[]): IEnumerable<any[]> {
+    for (let j = 0; j < la.length; j++) {
+      const pa = la[j];
+      const pb = lb[j];
 
-  const bufA = from(arrays[0]);
-  let bufX = bufA.select(x => [x]);
-  for (const bufY of arrays.slice(1)) {
-    bufX = bufX.zip(bufY, (a: T[], b: T) => [...a, b]);
+      const d = deltaE(pa, pb);
+      if (d > tolerance) {
+        return false;
+      }
+    }
   }
 
-  return bufX;
-}
-
+  return true;
+};
 @Component({
   selector: 'app-renketsu',
   templateUrl: './renketsu.component.html',
@@ -80,6 +45,7 @@ export class RenketsuComponent implements OnInit {
 
   processing = false;
   progress = 0;
+  images: string[] = [];
   imageSrc = '';
   accuracy = '12';
 
@@ -123,80 +89,117 @@ export class RenketsuComponent implements OnInit {
     this.processing = true;
     this.imageBlob = null;
     this.imageSrc = '';
+    this.images = [];
 
     try {
       const start = new Date();
-      const images = await Promise.all(this.files.map(file => loadImage(file)));
+      const images = await Promise.all(this.files.map(file => loadImage(file, fixedImageWidthPx)));
+
+      const canvases = images.map((image) => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+        return { canvas, context, image };
+      });
+
+      const withoutMargins = canvases.map(({ canvas, context, image }) => {
+        const withoutMarginRect = {
+          x: margin.left,
+          y: margin.top,
+          width: image.scaledImageData.width - margin.right - margin.left,
+          height: image.scaledImageData.height - margin.bottom - margin.top
+        };
+        return { canvas, context, image, withoutMarginRect };
+      })
+
+      for (const { canvas, context, image, withoutMarginRect } of withoutMargins) {
+        canvas.setAttribute('width', `${image.scaledImageData.width}px`);
+        canvas.setAttribute('height', `${image.scaledImageData.height}px`);
+
+        drawImage(context, image.scaledImageData, { x: 0, y: 0 }, { x: 0, y: 0, width: image.scaledImageData.width, height: image.scaledImageData.height });
+
+        context.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        context.lineWidth = 4;
+        context.strokeRect(withoutMarginRect.x, withoutMarginRect.y, withoutMarginRect.width, withoutMarginRect.height);
+
+        this.images.push(canvas.toDataURL('image/png'));
+      }
+
       this.progress = 10;
 
       const isSameSize = from(images)
-        .select(x => x.imageData)
-        .pairwise((a,b) => a.width == b.width && a.height == b.height)
+        .select(x => x.scaledImageData)
+        .pairwise((a,b) => a.width == b.width)
         .all(x => x);
       if (!isSameSize) {
-        this.toast.warning('画像ファイルは同じサイズにしてください');
+        this.toast.warning('画像ファイルは同じ幅にしてください');
         return;
       }
 
-      const zipedLines = zip(images.map(x => x.lines));
-      const sameTopNum = zipedLines.takeWhile((arr) => bytesEquals(arr)).count();
-      const sameLastNum = zipedLines.reverse().takeWhile((arr) => bytesEquals(arr)).count();
+      const lineColorComparer = (x: {l: RGBA[], r: RGBA[]}) => {
+        const sames = from(x.l).zip(x.r, (a, b) => {
+          const d = deltaE(a, b);
+          return d;
+        }).where(delta => delta < deltaTolerance).count();
+        return sames / x.l.length;
+      };
 
-      const ignoreTopPx = sameTopNum + topMarginPx;
-      const ignoreBottomPx = sameLastNum + bottomMarginPx;
+      const pixelsA = getPixelsFromRect(images[0].scaledImageData, withoutMargins[0].withoutMarginRect);
+      const pixelsB = getPixelsFromRect(images[1].scaledImageData, withoutMargins[1].withoutMarginRect);
 
-      // const results = [];
-      // for (let i = 0; i < images.length; i++) {
-      //   for (let j = 0; j < images.length; j++) {
-      //     if (i == j) {
-      //       continue;
-      //     }
+      const zipedLines = pixelsA.zip(pixelsB, (l, r) => ({l: l.toArray(), r: r.toArray()}));
+      const sameTopNum = zipedLines.select(lineColorComparer).takeWhile(ave => ave > 0.8).count() + 10;
+      const sameLastNum = zipedLines.reverse().select(lineColorComparer).takeWhile(ave => ave > 0.8).count();
 
-      //     const averaves = [];
-      //     const compareLinesA = from(images[i].lines).skip(ignoreTopPx).take(compareLines).selectMany(x => from(x));
-      //     const steps = Number(this.accuracy);
-      //     for( let i = 0; i < images[j].lines.length - (ignoreBottomPx) - compareLines; i+=steps) {
-      //       const compareLinesB = from(images[j].lines).skip(ignoreTopPx).skip(i).take(compareLines).selectMany(x => from(x));
+      const availables = withoutMargins.map((x) => {
+        const availableRect = {
+          x: x.withoutMarginRect.x,
+          y: x.withoutMarginRect.y + sameTopNum,
+          width: x.withoutMarginRect.width,
+          height: x.withoutMarginRect.height - sameLastNum - sameTopNum
+        };
+        return { ...x, availableRect };
+      })
 
-      //       const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
-      //         .select(([l,r]) => deltaE(l, r)).average();
-      //       averaves.push({i, ave});
+      for (const { canvas, context, image, availableRect } of availables) {
 
-      //     }
-      //     const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
-      //     results.push({ i, j, min });
-      //   }
-      // }
+        context.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+        context.lineWidth = 4;
+        context.strokeRect(availableRect.x, availableRect.y, availableRect.width, availableRect.height);
 
-      // const ord = from(results).orderBy(x => x.min.ave).toArray();
+        this.images.push(canvas.toDataURL('image/png'));
+      }
 
-      // const image1 = images[ord[0].i];
-      // const image2 = images[ord[1].i];
-      // const hitIndex = ord[1].min.i;
+      let ignoreTopPx = sameTopNum + margin.top;
+      let ignoreBottomPx = sameLastNum + margin.bottom;
 
       const image1 = images[0];
       const image2 = images[1];
-      const averaves = [];
-      const compareLinesA = from(image2.lines).skip(ignoreTopPx).take(compareLines).selectMany(x => from(x));
-      const steps = Number(this.accuracy);
-      const actualLineLen = image1.lines.length - (ignoreBottomPx) - compareLines;
-      for( let i = 0; i < actualLineLen; i+=steps) {
-        const compareLinesB = from(image1.lines).skip(ignoreTopPx).skip(i).take(compareLines).selectMany(x => from(x));
+      const basePixelLines = getPixelsFromRect(images[0].scaledImageData, availables[0].availableRect).select(x=> x.toArray());
+      const comparePixelLines = getPixelsFromRect(images[1].scaledImageData, availables[1].availableRect).take(compareLines).select(x=> x.toArray()).toArray();
 
-        const ave = compareLinesA.buffer(4).zip(compareLinesB.buffer(4), (l,r) => [l,r])
-          .select(([l,r]) => deltaE(l, r)).average();
-        averaves.push({i, ave});
-
-        if (i % 10 == 0) {
-          this.progress = 10 + Math.ceil((i / actualLineLen) * 80);
+      let hitIndex = 0;
+      const actualLineLen = basePixelLines.count() - compareLines
+      for (let index = 0; index < basePixelLines.count() - compareLines; index++) {
+        if (index % 10 == 0) {
+          this.progress = 10 + Math.ceil((index / actualLineLen) * 80);
           await new Promise(resolve => setTimeout(resolve, 10));
         }
+
+        const basePixels = basePixelLines.skip(index).take(compareLines).toArray();
+        const same = isEqualPixels(comparePixelLines, basePixels, deltaTolerance);
+        if (same) {
+          hitIndex = index;
+          break;
+        }
       }
-      const min = from(averaves).where(x => !Number.isNaN(x.ave)).minBy(x => x.ave);
-      const hitIndex = min.i;
 
       const imageWid = image1.imageData.width;
       const imageHei = image1.imageData.height;
+
+      const scale = availables[0].image.scale;
+      ignoreTopPx = ignoreTopPx / scale;
+      ignoreBottomPx = ignoreBottomPx / scale;
+      hitIndex = hitIndex / scale;
 
       const contentHeight = imageHei - (ignoreTopPx + ignoreBottomPx);
       const outputHeight = ignoreTopPx + hitIndex + contentHeight + ignoreBottomPx;
@@ -205,14 +208,10 @@ export class RenketsuComponent implements OnInit {
       canvas.setAttribute('height', `${outputHeight}px`);
       const context = canvas.getContext('2d')!;
 
-      const drawImage = (context: CanvasRenderingContext2D, imageData: ImageData, location: {x: number, y: number}, srcRect: { left: number, top: number, width: number, height: number,  }) => {
-        context.putImageData(imageData, location.x, location.y - srcRect.top, srcRect.left, srcRect.top, srcRect.width, srcRect.height);
-      };
-
-      drawImage(context, image1.imageData, { x: 0, y: 0 }, { left: 0, top: 0, width: imageWid, height: ignoreTopPx });
-      drawImage(context, image1.imageData, { x: 0, y: ignoreTopPx }, { left: 0, top: ignoreTopPx, width: imageWid, height: hitIndex });
-      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex }, { left: 0, top: ignoreTopPx, width: imageWid, height: contentHeight });
-      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex + contentHeight }, { left: 0, top: imageHei - ignoreBottomPx, width: imageWid, height: ignoreBottomPx });
+      drawImage(context, image1.imageData, { x: 0, y: 0 }, { x: 0, y: 0, width: imageWid, height: ignoreTopPx });
+      drawImage(context, image1.imageData, { x: 0, y: ignoreTopPx }, { x: 0, y: ignoreTopPx, width: imageWid, height: hitIndex });
+      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex }, { x: 0, y: ignoreTopPx, width: imageWid, height: contentHeight });
+      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex + contentHeight }, { x: 0, y: imageHei - ignoreBottomPx, width: imageWid, height: ignoreBottomPx });
 
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
@@ -228,8 +227,6 @@ export class RenketsuComponent implements OnInit {
     } finally {
       this.processing = false;
     }
-
-
   }
 
   get canShare(): boolean {
@@ -237,12 +234,7 @@ export class RenketsuComponent implements OnInit {
   }
 
   async onShare() {
-    // share();
-    // return;
-
     const type = 'image/png';
-    // const canvas = this.myCanvas.nativeElement;
-    // const blob = await canvasToBlob(canvas, type);
     const blob = this.imageBlob;
     if (blob == null) {
       console.log(`${this.constructor.name} ~ onShare ~ blob is null`);
@@ -320,38 +312,3 @@ const toBlob = (base64: string) => {
     return null;
   }
 };
-
-// https://stackoverflow.com/a/52453462
-function deltaE(rgbA: number[], rgbB: number[]): number {
-  let labA = rgb2lab(rgbA);
-  let labB = rgb2lab(rgbB);
-  let deltaL = labA[0] - labB[0];
-  let deltaA = labA[1] - labB[1];
-  let deltaB = labA[2] - labB[2];
-  let c1 = Math.sqrt(labA[1] * labA[1] + labA[2] * labA[2]);
-  let c2 = Math.sqrt(labB[1] * labB[1] + labB[2] * labB[2]);
-  let deltaC = c1 - c2;
-  let deltaH = deltaA * deltaA + deltaB * deltaB - deltaC * deltaC;
-  deltaH = deltaH < 0 ? 0 : Math.sqrt(deltaH);
-  let sc = 1.0 + 0.045 * c1;
-  let sh = 1.0 + 0.015 * c1;
-  let deltaLKlsl = deltaL / (1.0);
-  let deltaCkcsc = deltaC / (sc);
-  let deltaHkhsh = deltaH / (sh);
-  let i = deltaLKlsl * deltaLKlsl + deltaCkcsc * deltaCkcsc + deltaHkhsh * deltaHkhsh;
-  return i < 0 ? 0 : Math.sqrt(i);
-}
-
-function rgb2lab(rgb: number[]): [number, number, number] {
-  let r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255, x, y, z;
-  r = (r > 0.04045) ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-  g = (g > 0.04045) ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-  b = (b > 0.04045) ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-  x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
-  y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
-  z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
-  x = (x > 0.008856) ? Math.pow(x, 1/3) : (7.787 * x) + 16/116;
-  y = (y > 0.008856) ? Math.pow(y, 1/3) : (7.787 * y) + 16/116;
-  z = (z > 0.008856) ? Math.pow(z, 1/3) : (7.787 * z) + 16/116;
-  return [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
-}

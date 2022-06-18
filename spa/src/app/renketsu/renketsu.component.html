@@ -52,6 +52,13 @@
     </div>
   </div>
 
+  <div class="row mb-2">
+    <div *ngFor="let image of images" class="col-6">
+      <img class="w-100" [src]="image">
+    </div>
+  </div>
+
+
   <div class="row">
     <div class="col-12">
       <img class="w-100" [src]="imageSrc">
