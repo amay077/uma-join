@@ -9,7 +9,7 @@
   <div class="row">
     <div class="col-12 mb-4">
       <ngx-dropzone (change)="onSelect($event)" [disabled]="processing">
-        <ngx-dropzone-label>Drop it, baby!</ngx-dropzone-label>
+        <ngx-dropzone-label>ウマ画像ファイルを追加</ngx-dropzone-label>
         <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">
           <!-- <ngx-dropzone-label>{{ f.name }}</ngx-dropzone-label> -->
         </ngx-dropzone-image-preview>
@@ -20,7 +20,7 @@
 
   <div class="row">
 
-    <div class="col-md-12 col-12 mb-3">
+    <div hidden class="col-md-12 col-12 mb-3">
       <select class="form-control" [(ngModel)]="accuracy" [disabled]="processing">
         <option value="32">1 - 速度が少し上がるが、精度がすごく下がる</option>
         <option value="20">2 - 速度がわずかに上がるが、精度が少し下がる</option>
@@ -32,7 +32,7 @@
     </div>
 
     <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary" style="margin-bottom: 10px;" [disabled]="!(files.length == 2 && !processing)" (click)="onJoin()">
+      <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length == 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
           <div class="spinner-border spinner-border-sm" role="status"></div>
           Processing... {{progress}}%
@@ -41,23 +41,24 @@
           <i class="fa fa-play" aria-hidden="true"></i>&nbsp;がっちゃんこ!!
         </span>
       </button>
+    </div>
 
-
+    <div class="col-md-4 col-12 mb-3">
+      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''"  (click)="onDownload()"><i class="fa fa-download" aria-hidden="true"></i>&nbsp;ダウンロード</button>
     </div>
     <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" style="margin-bottom: 10px;" (click)="onDownload()"><i class="fa fa-download" aria-hidden="true"></i>&nbsp;ダウンロード</button>
+      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" *ngIf="canShare"  (click)="onShare()"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;シェア</button>
     </div>
     <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" *ngIf="canShare" style="margin-bottom: 10px;" (click)="onShare()"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;シェア</button>
+      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''"  (click)="showDetails = !showDetails ">経過を{{showDetails ? '非表示' : '表示'}}</button>
     </div>
   </div>
 
-  <div class="row mb-2">
+  <div *ngIf="showDetails" class="row mb-2">
     <div *ngFor="let image of images" class="col-6">
       <img class="w-100" [src]="image">
     </div>
   </div>
-
 
   <div class="row">
     <div class="col-12">
