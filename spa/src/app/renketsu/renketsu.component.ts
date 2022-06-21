@@ -5,13 +5,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Rect, RGBA } from './func/types';
 import { deltaE } from './func/color-diff';
-import { drawImage, getPixelsFromRect, loadImage, canvasToBlob } from './func/image-func';
+import { drawImage, getPixelsFromRect, loadImage, canvasToBlob, getImageDataFromRect } from './func/image-func';
+// const pixelmatch = require('pixelmatch');
+import * as pixelmatch from 'pixelmatch';
 
 const fixedImageWidthPx = 300;
 const margin = {
   top: 50,
   left: 20,
-  right: 200,
+  right: 100,
   bottom: 50
 };
 const compareLines = 30;
@@ -51,8 +53,9 @@ export class RenketsuComponent implements OnInit {
   images: string[] = [];
   imageSrc = '';
   accuracy = '12';
+  reorder = true;
 
-  showDetails = false;
+  showDetails = true;
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
@@ -88,12 +91,18 @@ export class RenketsuComponent implements OnInit {
     scaledImageData2: ImageData, availableRect2: Rect,
     progressFunc: (index: number, length: number) => Promise<void>): Promise<{
       index: number;
+      diffNum: number;
+      matchPercentage: number;
       // min: number;
       // max: number;
       // average: number;
   }> {
     const basePixelLines = getPixelsFromRect(scaledImageData1, availableRect1).select(x=> x.toArray());
-    const comparePixelLines = getPixelsFromRect(scaledImageData2, availableRect2).take(compareLines).select(x=> x.toArray()).toArray();
+
+    const compareImageData = getImageDataFromRect(scaledImageData2, { ...availableRect2, height: compareLines });
+
+    const width = availableRect2.width;
+    const height = compareLines;
 
     const results = [];
     const actualLineLen = basePixelLines.count() - compareLines
@@ -102,16 +111,19 @@ export class RenketsuComponent implements OnInit {
         await progressFunc(index, actualLineLen);
       }
 
-      const basePixels = basePixelLines.skip(index).take(compareLines).toArray();
-      const r = isEqualPixels(comparePixelLines, basePixels, deltaTolerance);
-      if (r) {
-        return { index };
-      }
-      // results.push({ ...r, index });
+      const baseImageData = getImageDataFromRect(scaledImageData1, { ...availableRect1, y: availableRect1.y + index, height });
+
+      const diffNum = pixelmatch(baseImageData.data, compareImageData.data, null, width, compareLines,
+        { threshold: 0.1, includeAA: true, alpha: 0 });
+      const matchPercentage = (100 - ((diffNum / (width * height)) * 100))
+      results.push({index, diffNum, matchPercentage });
+      console.log(`${this.constructor.name}`, index, diffNum, matchPercentage.toFixed(2));
     }
-    // const min = from(results).minBy(x => x.average);
-    // return min;
-    return { index: -1 };
+
+
+    const min = from(results).minBy(x => x.diffNum);
+    return min;
+    // return { index: -1 };
   }
 
   async onJoin() {
@@ -159,6 +171,21 @@ export class RenketsuComponent implements OnInit {
 
         this.images.push(canvas.toDataURL('image/png'));
       }
+
+      const img1 = images[0].scaledImageData;
+      const img2 = images[1].scaledImageData;
+      const width = img1.width;
+      const height = img1.height;
+
+      const diffCanvas = document.createElement('canvas');
+      diffCanvas.setAttribute('width', `${width}px`);
+      diffCanvas.setAttribute('height', `${height}px`);
+      const diffContext = diffCanvas.getContext('2d')!;
+      const diff = diffContext.createImageData(width, height);
+      const ret = pixelmatch(img1.data, img2.data, diff.data, width, height, {threshold: 0.1, includeAA: true, alpha: 0});
+      console.log(`${this.constructor.name} ~ onJoin ~ ret`, ret);
+      drawImage(diffContext, diff, { x: 0, y: 0 }, { x: 0, y: 0, width, height });
+      this.images.push(diffCanvas.toDataURL('image/png'));
 
       this.progress = 10;
 
@@ -208,39 +235,36 @@ export class RenketsuComponent implements OnInit {
       let ignoreTopPx = sameTopNum + margin.top;
       let ignoreBottomPx = sameLastNum + margin.bottom;
 
-
-
-
-
-      let image1 = images[0];
-      let image2 = images[1];
-      const min = await this.compareImage(
-        image1.scaledImageData, availables[0].availableRect,
-        image2.scaledImageData, availables[1].availableRect,
+      const min1 = await this.compareImage(
+        images[0].scaledImageData, availables[0].availableRect,
+        images[1].scaledImageData, availables[1].availableRect,
         async (index, actualLineLen) => {
           this.progress = 10 + Math.ceil((index / actualLineLen) * 40);
           return new Promise(resolve => setTimeout(resolve, 10));
         });
 
-      let hitIndex = min.index;
+      const compareResults = [{...min1, images}];
       this.progress = 50;
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      if (hitIndex < 0) {
-        image1 = images[1];
-        image2 = images[0];
-        const min = await this.compareImage(
-          image1.scaledImageData, availables[1].availableRect,
-          image2.scaledImageData, availables[0].availableRect,
+      if (this.reorder) {
+        const min2 = await this.compareImage(
+          images[1].scaledImageData, availables[1].availableRect,
+          images[0].scaledImageData, availables[0].availableRect,
           async (index, actualLineLen) => {
             this.progress = 50 + Math.ceil((index / actualLineLen) * 40);
             return new Promise(resolve => setTimeout(resolve, 10));
           });
 
-        hitIndex = min.index;
+          compareResults.push({...min2, images: [images[1], images[0]] });
       }
       this.progress = 90;
       await new Promise(resolve => setTimeout(resolve, 10));
+
+      const min = from(compareResults).minBy(x => x.diffNum);
+      const image1 = min.images[0];
+      const image2 = min.images[1];
+      let hitIndex = min.index;
 
       const imageWid = image1.imageData.width;
       const imageHei = image1.imageData.height;

@@ -18,6 +18,20 @@ export function getPixelsFromRect(imageData: ImageData, rect: Rect): IEnumerable
   return trimedPixels;
 }
 
+export function getImageDataFromRect(imageData: ImageData, rect: Rect): ImageData {
+  const pixelStream = from(imageData.data).buffer(4).cast<RGBA>().buffer(imageData.width);
+  const trimedPixels = pixelStream
+    .skip(rect.y)
+    .take(Math.min(rect.height, imageData.height - rect.y))
+    .select(line => from(line)
+      .skip(rect.x)
+      .take(Math.min(rect.width, imageData.width - rect.x))
+      .selectMany(x => x).toArray())
+    .selectMany(x => x);
+
+  return { width: rect.width, height: rect.height, data: new Uint8ClampedArray(trimedPixels.toArray()) }  ;
+}
+
 export function createImageData(image: HTMLImageElement, scale: number): ImageData {
   const canvas = document.createElement('canvas');
 
