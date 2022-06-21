@@ -55,7 +55,7 @@ export class RenketsuComponent implements OnInit {
   accuracy = '12';
   reorder = true;
 
-  showDetails = true;
+  showDetails = false;
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
