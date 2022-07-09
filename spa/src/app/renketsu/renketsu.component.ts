@@ -311,13 +311,12 @@ export class RenketsuComponent implements OnInit {
         } else {
           // 2番目以降は、y:共通部TOP から
           pre.push({ image: cur.images[0], y: ignoreTopPx, height: cur.index })
-
-          // 最後の画像は height:画像の終端まで
-          if ( index == compareResults.length - 1 ) {
-            pre.push({ image: cur.images[1], y: ignoreTopPx, height: cur.images[1].scaledImageData.height - ignoreTopPx  })
-          }
         }
 
+        // 最後の画像は height:画像の終端まで
+        if ( index == compareResults.length - 1 ) {
+          pre.push({ image: cur.images[1], y: ignoreTopPx, height: cur.images[1].scaledImageData.height - ignoreTopPx  })
+        }
         return pre;
       }, [] as { image: {
         imageData: ImageData;
