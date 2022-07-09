@@ -1,13 +1,14 @@
 import { Component, NgZone, OnInit } from '@angular/core';
 import { from } from 'linq';
 import { saveAs } from 'file-saver';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, PreloadAllModules, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Rect, RGBA } from './func/types';
 import { deltaE } from './func/color-diff';
 import { drawImage, getPixelsFromRect, loadImage, canvasToBlob, getImageDataFromRect } from './func/image-func';
 // const pixelmatch = require('pixelmatch');
 import * as pixelmatch from 'pixelmatch';
+import { off } from 'process';
 
 const fixedImageWidthPx = 300;
 const margin = {
@@ -40,6 +41,15 @@ const isEqualPixels = (a: RGBA[][], b: RGBA[][], tolerance: number): boolean => 
   // return { min: r.min(), max: r.max(), average: r.average() };
   return true;
 };
+
+type CompareImageResult = {
+  index: number;
+  diffNum: number;
+  matchPercentage: number;
+  // min: number;
+  // max: number;
+  // average: number;
+};
 @Component({
   selector: 'app-renketsu',
   templateUrl: './renketsu.component.html',
@@ -50,7 +60,7 @@ export class RenketsuComponent implements OnInit {
 
   processing = false;
   progress = 0;
-  images: string[] = [];
+  images: { tag: string, image: string }[] = [];
   imageSrc = '';
   accuracy = '12';
   reorder = true;
@@ -76,6 +86,42 @@ export class RenketsuComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const arr = [2,5,4,3,1];
+
+    const results = arr.reduce((results, a) => {
+      const hit = arr.find(b => a + 1 == b);
+      if (hit != null) {
+        results.push([a, hit]);
+      }
+      return results;
+    }, [] as [number, number][])
+    // [2, 3]
+    // [4, 5]
+    // [3, 4]
+    // [1, 2]
+    console.log(`${this.constructor.name} ~ ngOnInit ~ results`, results);
+
+    // 仲間はずれ(to に居ない)の from を探す
+    let search = from(results).select(r => {
+        const hit = results.find(([a, b]) => r[0] == b);
+        return !hit ? r[0] : -1;
+      }).where(x => x >= 0).firstOrDefault();
+    const ordered = [search];
+    let foundIndex = results.findIndex(([a, _]) => a == search);;
+    while (foundIndex >= 0) {
+      const [_, b] = results[foundIndex]
+      ordered.push(b);
+      search = b;
+      results.splice(foundIndex, 1);
+      foundIndex = results.findIndex(([a, _]) => a == search);;
+    }
+    //  [1, 2]
+    //  [2, 3]
+    //  [3, 4]
+    //  [4, 5]
+    console.log(`${this.constructor.name} ~ ngOnInit ~ ordered`, ordered);
+
+    // results
   }
 
   onSelect(event: any) {
@@ -89,14 +135,7 @@ export class RenketsuComponent implements OnInit {
   private async compareImage(
     scaledImageData1: ImageData, availableRect1: Rect,
     scaledImageData2: ImageData, availableRect2: Rect,
-    progressFunc: (index: number, length: number) => Promise<void>): Promise<{
-      index: number;
-      diffNum: number;
-      matchPercentage: number;
-      // min: number;
-      // max: number;
-      // average: number;
-  }> {
+    progressFunc: (index: number, length: number) => Promise<void>): Promise<CompareImageResult> {
     const basePixelLines = getPixelsFromRect(scaledImageData1, availableRect1).select(x=> x.toArray());
 
     const compareImageData = getImageDataFromRect(scaledImageData2, { ...availableRect2, height: compareLines });
@@ -117,7 +156,7 @@ export class RenketsuComponent implements OnInit {
         { threshold: 0.1, includeAA: true, alpha: 0 });
       const matchPercentage = (100 - ((diffNum / (width * height)) * 100))
       results.push({index, diffNum, matchPercentage });
-      console.log(`${this.constructor.name}`, index, diffNum, matchPercentage.toFixed(2));
+      // console.log(`${this.constructor.name}`, index, diffNum, matchPercentage.toFixed(2));
     }
 
 
@@ -128,10 +167,10 @@ export class RenketsuComponent implements OnInit {
 
   async onJoin() {
 
-    if (this.files.length != 2) {
-      this.toast.warning('画像ファイルを2つ選択してください');
-      return;
-    }
+    // if (this.files.length != 2) {
+    //   this.toast.warning('画像ファイルを2つ選択してください');
+    //   return;
+    // }
 
     this.progress = 0;
     this.processing = true;
@@ -159,18 +198,23 @@ export class RenketsuComponent implements OnInit {
         return { canvas, context, image, withoutMarginRect };
       })
 
-      for (const { canvas, context, image, withoutMarginRect } of withoutMargins) {
-        canvas.setAttribute('width', `${image.scaledImageData.width}px`);
-        canvas.setAttribute('height', `${image.scaledImageData.height}px`);
+      {
+        let index = 0;
+        for (const { canvas, context, image, withoutMarginRect } of withoutMargins) {
+          canvas.setAttribute('width', `${image.scaledImageData.width}px`);
+          canvas.setAttribute('height', `${image.scaledImageData.height}px`);
 
-        drawImage(context, image.scaledImageData, { x: 0, y: 0 }, { x: 0, y: 0, width: image.scaledImageData.width, height: image.scaledImageData.height });
+          drawImage(context, image.scaledImageData, { x: 0, y: 0 }, { x: 0, y: 0, width: image.scaledImageData.width, height: image.scaledImageData.height });
 
-        context.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-        context.lineWidth = 4;
-        context.strokeRect(withoutMarginRect.x, withoutMarginRect.y, withoutMarginRect.width, withoutMarginRect.height);
+          context.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+          context.lineWidth = 4;
+          context.strokeRect(withoutMarginRect.x, withoutMarginRect.y, withoutMarginRect.width, withoutMarginRect.height);
 
-        this.images.push(canvas.toDataURL('image/png'));
+          this.images.push({ tag:`1 + ${index}`, image: canvas.toDataURL('image/png') });
+          index++;
+        }
       }
+
 
       const img1 = images[0].scaledImageData;
       const img2 = images[1].scaledImageData;
@@ -185,7 +229,7 @@ export class RenketsuComponent implements OnInit {
       const ret = pixelmatch(img1.data, img2.data, diff.data, width, height, {threshold: 0.1, includeAA: true, alpha: 0});
       console.log(`${this.constructor.name} ~ onJoin ~ ret`, ret);
       drawImage(diffContext, diff, { x: 0, y: 0 }, { x: 0, y: 0, width, height });
-      this.images.push(diffCanvas.toDataURL('image/png'));
+      this.images.push({ tag:'2', image: diffCanvas.toDataURL('image/png') });
 
       this.progress = 10;
 
@@ -223,69 +267,101 @@ export class RenketsuComponent implements OnInit {
         return { ...x, availableRect };
       })
 
+      let index = 0;
       for (const { canvas, context, image, availableRect } of availables) {
 
         context.strokeStyle = 'rgba(0, 255, 0, 0.5)';
         context.lineWidth = 4;
         context.strokeRect(availableRect.x, availableRect.y, availableRect.width, availableRect.height);
 
-        this.images.push(canvas.toDataURL('image/png'));
+        this.images.push({ tag: `3 + ${index}` , image: canvas.toDataURL('image/png') });
+        index++;
       }
 
       let ignoreTopPx = sameTopNum + margin.top;
       let ignoreBottomPx = sameLastNum + margin.bottom;
 
-      const min1 = await this.compareImage(
-        images[0].scaledImageData, availables[0].availableRect,
-        images[1].scaledImageData, availables[1].availableRect,
-        async (index, actualLineLen) => {
-          this.progress = 10 + Math.ceil((index / actualLineLen) * 40);
-          return new Promise(resolve => setTimeout(resolve, 10));
-        });
+      const compareResults = [];
+      const progressDivision = (90 - 10) / (images.length - 1);
+      for (let i = 0; i < images.length - 1; i++) {
+        const j = i + 1;
+        const image1 = images[i];
+        const image2 = images[j];
+        const availables1 = availables[i];
+        const availables2 = availables[j];
 
-      const compareResults = [{...min1, images}];
-      this.progress = 50;
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      if (this.reorder) {
-        const min2 = await this.compareImage(
-          images[1].scaledImageData, availables[1].availableRect,
-          images[0].scaledImageData, availables[0].availableRect,
+        const min1 = await this.compareImage(
+          image1.scaledImageData, availables1.availableRect,
+          image2.scaledImageData, availables2.availableRect,
           async (index, actualLineLen) => {
-            this.progress = 50 + Math.ceil((index / actualLineLen) * 40);
+            this.progress = 10 + (progressDivision * i) + Math.ceil((index / actualLineLen) * progressDivision);
             return new Promise(resolve => setTimeout(resolve, 10));
           });
 
-          compareResults.push({...min2, images: [images[1], images[0]] });
+        compareResults.push({...min1, images: [image1, image2]});
       }
+
       this.progress = 90;
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      const min = from(compareResults).minBy(x => x.diffNum);
-      const image1 = min.images[0];
-      const image2 = min.images[1];
-      let hitIndex = min.index;
+      const offsets = compareResults.reduce((pre, cur, index) => {
+        if (index == 0) {
+          // 最初の画像は y:0 から
+          pre.push({ image: cur.images[0], y: 0, height: ignoreTopPx + cur.index })
+        } else {
+          // 2番目以降は、y:共通部TOP から
+          pre.push({ image: cur.images[0], y: ignoreTopPx, height: cur.index })
 
-      const imageWid = image1.imageData.width;
-      const imageHei = image1.imageData.height;
+          // 最後の画像は height:画像の終端まで
+          if ( index == compareResults.length - 1 ) {
+            pre.push({ image: cur.images[1], y: ignoreTopPx, height: cur.images[1].scaledImageData.height - ignoreTopPx  })
+          }
+        }
 
-      const scale = availables[0].image.scale;
-      ignoreTopPx = ignoreTopPx / scale;
-      ignoreBottomPx = ignoreBottomPx / scale;
-      hitIndex = hitIndex / scale;
+        return pre;
+      }, [] as { image: {
+        imageData: ImageData;
+        scaledImageData: ImageData;
+        scale: number;
+      }, y: number, height: number }[])
 
-      const contentHeight = imageHei - (ignoreTopPx + ignoreBottomPx);
-      const outputHeight = ignoreTopPx + hitIndex + contentHeight + ignoreBottomPx;
+      const totalHeight = offsets.reduce((pre, cur) => pre + cur.height, 0);
+
+      offsets.forEach((offset, index) => {
+        const imageData = offset.image.scaledImageData;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+
+        canvas.setAttribute('width', `${imageData.width}px`);
+        canvas.setAttribute('height', `${imageData.height}px`);
+        drawImage(context, imageData, { x: 0, y: 0 }, { x: 0, y: 0, width: imageData.width, height: imageData.height});
+
+        const availableRect = {
+          x: 5,
+          y: offset.y,
+          width: imageData.width - 10,
+          height: offset.height
+        };
+        context.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        context.lineWidth = 4;
+        context.strokeRect(availableRect.x, availableRect.y, availableRect.width, availableRect.height);
+
+        this.images.push({ tag:`4 + ${index}`, image: canvas.toDataURL('image/png') });
+      });
+
       const canvas = document.createElement('canvas');
-      canvas.setAttribute('width', `${imageWid}px`);
-      canvas.setAttribute('height', `${outputHeight}px`);
       const context = canvas.getContext('2d')!;
+      const scale = offsets[0].image.scale;
+      canvas.setAttribute('width', `${offsets[0].image.imageData.width}px`);
+      canvas.setAttribute('height', `${totalHeight / scale}px`);
 
-      drawImage(context, image1.imageData, { x: 0, y: 0 }, { x: 0, y: 0, width: imageWid, height: ignoreTopPx });
-      drawImage(context, image1.imageData, { x: 0, y: ignoreTopPx }, { x: 0, y: ignoreTopPx, width: imageWid, height: hitIndex });
-      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex }, { x: 0, y: ignoreTopPx, width: imageWid, height: contentHeight });
-      drawImage(context, image2.imageData, { x: 0, y: ignoreTopPx + hitIndex + contentHeight }, { x: 0, y: imageHei - ignoreBottomPx, width: imageWid, height: ignoreBottomPx });
-
+      let srcY = 0;
+      for (const offset of offsets) {
+        drawImage(context, offset.image.imageData,
+          { x: 0, y: srcY },
+          { x: 0, y: offset.y / scale, width: offset.image.imageData.width, height: offset.height / scale });
+        srcY += (offset.height / scale);
+      }
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
 

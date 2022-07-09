@@ -32,7 +32,7 @@
     </div>
 
     <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length == 2 && !processing)" (click)="onJoin()">
+      <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length >= 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
           <div class="spinner-border spinner-border-sm" role="status"></div>
           Processing... {{progress}}%
@@ -56,7 +56,8 @@
 
   <div *ngIf="showDetails" class="row mb-2">
     <div *ngFor="let image of images" class="col-6">
-      <img class="w-100" [src]="image">
+      <span>{{image.tag}}</span>
+      <img class="w-100" [src]="image.image">
     </div>
   </div>
 
