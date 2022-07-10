@@ -1,14 +1,14 @@
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { RenketsuComponent } from './renketsu/renketsu.component';
-import { NgxDropzoneModule } from 'ngx-dropzone';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';    // add
+import { BrowserModule } from '@angular/platform-browser';
+// import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgxDropzoneModule } from 'ngx-dropzone';
 import { ToastrModule } from 'ngx-toastr';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { RenketsuComponent } from './renketsu/renketsu.component';
 
 @NgModule({
   declarations: [
@@ -19,10 +19,9 @@ import { ToastrModule } from 'ngx-toastr';
     BrowserModule,
     FormsModule,
     AppRoutingModule,
-    HttpClientModule,
-    NgbModule,
-    NgxDropzoneModule,
     BrowserAnimationsModule,
+    // NgbModule,
+    NgxDropzoneModule,
     ToastrModule.forRoot({
       preventDuplicates: true,
       positionClass: 'toast-top-center',

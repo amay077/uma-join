@@ -29,7 +29,7 @@ export function getImageDataFromRect(imageData: ImageData, rect: Rect): ImageDat
       .selectMany(x => x).toArray())
     .selectMany(x => x);
 
-  return { width: rect.width, height: rect.height, data: new Uint8ClampedArray(trimedPixels.toArray()) }  ;
+  return new ImageData(new Uint8ClampedArray(trimedPixels.toArray()), rect.width, rect.height);
 }
 
 export function createImageData(image: HTMLImageElement, scale: number): ImageData {
