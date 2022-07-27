@@ -16,6 +16,13 @@ export class DropImagesComponent implements OnInit {
 
   previews: { name: string, src: string }[] = [];
 
+  options = {
+    handle: '.handle',
+    onUpdate: (event: any) => {
+      this.filesChange.emit(this.files);
+    }
+  };
+
   ngOnInit(): void {
   }
 

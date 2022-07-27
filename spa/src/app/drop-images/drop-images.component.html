@@ -1,18 +1,26 @@
 <div class="d-flex flex-column w-100 mb-2" style="border: 2px dashed gray;">
-  <div [sortablejs]="previews" >
-    <div class="px-4 m-4" *ngFor="let preview of previews; let i = index;">
-      <div class="d-flex flex-row align-items-center">
+  <div [sortablejs]="previews" [sortablejsOptions]="options">
+    <div class="m-4 d-flex flex-column align-items-center justify-content-center" *ngFor="let preview of previews; let i = index;">
+      <div class="d-flex flex-row align-items-center justify-content-center">
+        <span class="handle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.1716 6.45504L7.75739 5.04083L12 0.798187L16.2426 5.04083L14.8284 6.45504L13.0001 4.62667V19.3733L14.8284 17.5449L16.2426 18.9592L12 23.2018L7.75739 18.9592L9.1716 17.5449L11.0001 19.3734V4.62658L9.1716 6.45504Z" fill="currentColor" /></svg>
+        </span>
+
         <span class="w-100" style="
-          max-width: 100%;
+          max-width: 70vw;
           text-overflow: ellipsis;
           overflow: hidden;
           white-space: nowrap;"
         >
           {{i+1}}. {{preview.name}}{{preview.name}}{{preview.name}}
         </span>
-        <i class="fa fa-times ml-1" aria-hidden="true" (click)="onDeleteImage(i)"></i>
+        <svg (click)="onDeleteImage(i)"
+          style="height: 2rem; width: 2rem;"
+          xmlns="http://www.w3.org/2000/svg"  class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </div>
-      <img style="width: 100%;" [src]="preview.src" class="preview">
+      <img style="width: 90%;" [src]="preview.src" class="preview">
     </div>
   </div>
 

@@ -105,6 +105,8 @@ export class RenketsuComponent implements OnInit {
   ngOnInit(): void { }
 
   async onJoin() {
+    this.files
+    console.log(`${this.constructor.name} ~ onJoin ~ this.files`, this.files);
     this.progress = 0;
     this.processing = true;
     this.imageBlob = null;
