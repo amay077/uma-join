@@ -1,11 +1,11 @@
-import { Component, NgZone, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit, ViewChild } from '@angular/core';
 import { from } from 'linq';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Rect, RGBA } from '../logic/types';
 import { deltaE } from '../logic/color-diff';
-import { drawImage, getPixelsFromRect, loadImage, canvasToBlob, getImageDataFromRect } from '../logic/image-func';
+import { drawImage, getPixelsFromRect, loadImage, canvasToBlob, getImageDataFromRect, loadImageAsDataURL } from '../logic/image-func';
 import * as pixelmatch from 'pixelmatch';
 
 const fixedImageWidthPx = 300;
@@ -89,6 +89,32 @@ export class RenketsuComponent implements OnInit {
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
+
+  previews: { name: string, src: string }[] = [];
+
+
+  @ViewChild('fileInput')
+  fileInput: any;
+
+  file: File | null = null;
+
+  onClickFileInputButton(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  async onChangeFileInput(): Promise<void> {
+    const files: { [key: string]: File } = this.fileInput.nativeElement.files;
+    for (const f of Object.values(files)) {
+      this.files.push(f);
+      const url = await loadImageAsDataURL(f)
+      this.previews.push({ name: f.name, src: url });
+    }
+  }
+
+  onDeleteImage(i: number) {
+    this.files.splice(i, 1);
+    this.previews.splice(i, 1);
+  }
 
   constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;

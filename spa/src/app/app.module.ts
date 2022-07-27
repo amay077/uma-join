@@ -9,6 +9,7 @@ import { ToastrModule } from 'ngx-toastr';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { RenketsuComponent } from './renketsu/renketsu.component';
+import { SortablejsModule } from 'ngx-sortablejs';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { RenketsuComponent } from './renketsu/renketsu.component';
       preventDuplicates: true,
       positionClass: 'toast-top-center',
     }),
+    SortablejsModule.forRoot({ animation: 150 }),
   ],
   providers: [],
   bootstrap: [AppComponent]

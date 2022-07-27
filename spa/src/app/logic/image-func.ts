@@ -62,3 +62,14 @@ export async function loadImage(f: Blob, fixedImageWidthPx: number): Promise<{ i
 export function drawImage(context: CanvasRenderingContext2D, imageData: ImageData, location: Point, srcRect: Rect)  {
   context.putImageData(imageData, location.x, location.y - srcRect.y, srcRect.x, srcRect.y, srcRect.width, srcRect.height);
 };
+
+
+export function loadImageAsDataURL(blob: Blob): Promise<string> {
+  return new Promise<string>(resolve => {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      resolve(e.target.result);
+    };
+    reader.readAsDataURL(blob);
+  })
+}
