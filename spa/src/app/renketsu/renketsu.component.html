@@ -18,8 +18,12 @@
   </div> -->
 
   <div>
-    <div class="d-flex flex-column w-100 mb-2" style="border: 2px dashed gray;"
-      >
+    <div class="d-flex align-items-center justify-content-center">
+      <span style="font-size: 0.9rem;">画像ファイルを数枚追加して 連結 を押してください。</span>
+    </div>
+    <app-drop-images [(files)]="files"></app-drop-images>
+
+    <!-- <div class="d-flex flex-column w-100 mb-2" style="border: 2px dashed gray;">
       <div [sortablejs]="previews" >
         <div class="px-4 m-4" *ngFor="let preview of previews; let i = index;">
           <div class="d-flex flex-row align-items-center">
@@ -43,12 +47,12 @@
             <span>画像ファイルを追加</span>
 
         </div>
-    </div>
+    </div> -->
 
   </div>
 
 
-  <div class="row">
+  <div class="row mt-4">
 
     <div hidden class="col-md-12 col-12 mb-3">
       <select class="form-control" [(ngModel)]="accuracy" [disabled]="processing">
@@ -68,7 +72,7 @@
           {{progress}}%
         </span>
         <span *ngIf="!processing">
-          <i class="fa fa-play" aria-hidden="true"></i>&nbsp;がっちゃんこ!!
+          <i class="fa fa-play" aria-hidden="true"></i>&nbsp;連結!!
         </span>
       </button>
     </div>

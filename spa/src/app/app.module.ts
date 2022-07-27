@@ -10,11 +10,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { RenketsuComponent } from './renketsu/renketsu.component';
 import { SortablejsModule } from 'ngx-sortablejs';
+import { DropImagesComponent } from './drop-images/drop-images.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    RenketsuComponent
+    RenketsuComponent,
+    DropImagesComponent
   ],
   imports: [
     BrowserModule,

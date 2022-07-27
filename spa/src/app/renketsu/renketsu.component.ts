@@ -22,9 +22,6 @@ type CompareImageResult = {
   index: number;
   diffNum: number;
   matchPercentage: number;
-  // min: number;
-  // max: number;
-  // average: number;
 };
 
 async function compareImage(
@@ -90,32 +87,6 @@ export class RenketsuComponent implements OnInit {
   files: File[] = [];
   private imageBlob: Blob | null = null;
 
-  previews: { name: string, src: string }[] = [];
-
-
-  @ViewChild('fileInput')
-  fileInput: any;
-
-  file: File | null = null;
-
-  onClickFileInputButton(): void {
-    this.fileInput.nativeElement.click();
-  }
-
-  async onChangeFileInput(): Promise<void> {
-    const files: { [key: string]: File } = this.fileInput.nativeElement.files;
-    for (const f of Object.values(files)) {
-      this.files.push(f);
-      const url = await loadImageAsDataURL(f)
-      this.previews.push({ name: f.name, src: url });
-    }
-  }
-
-  onDeleteImage(i: number) {
-    this.files.splice(i, 1);
-    this.previews.splice(i, 1);
-  }
-
   constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
 
@@ -132,14 +103,6 @@ export class RenketsuComponent implements OnInit {
   }
 
   ngOnInit(): void { }
-
-  onSelect(event: any) {
-    this.files.push(...event.addedFiles);
-  }
-
-  onRemove(event: any) {
-    this.files.splice(this.files.indexOf(event), 1);
-  }
 
   async onJoin() {
     this.progress = 0;
