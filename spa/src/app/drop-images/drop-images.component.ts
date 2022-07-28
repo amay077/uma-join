@@ -7,19 +7,16 @@ import { loadImageAsDataURL } from '../logic/image-func';
   styleUrls: ['./drop-images.component.scss']
 })
 export class DropImagesComponent implements OnInit {
-  @Input()
-  files: File[] = [];
-
 
   @Output()
   readonly filesChange = new EventEmitter<File[]>();
 
-  previews: { name: string, src: string }[] = [];
+  previews: { file: File, src: string }[] = [];
 
   options = {
     handle: '.handle',
     onUpdate: (event: any) => {
-      this.filesChange.emit(this.files);
+      this.filesChange.emit(this.previews.map(p => p.file));
     }
   };
 
@@ -29,7 +26,6 @@ export class DropImagesComponent implements OnInit {
   @ViewChild('fileInput')
   fileInput: any;
 
-  file: File | null = null;
 
   onClickFileInputButton(): void {
     this.fileInput.nativeElement.click();
@@ -37,17 +33,16 @@ export class DropImagesComponent implements OnInit {
 
   async onChangeFileInput(): Promise<void> {
     const files: { [key: string]: File } = this.fileInput.nativeElement.files;
-    for (const f of Object.values(files)) {
-      this.files.push(f);
-      const url = await loadImageAsDataURL(f)
-      this.previews.push({ name: f.name, src: url });
+    for (const file of Object.values(files)) {
+      const url = await loadImageAsDataURL(file)
+      this.previews.push({ file, src: url });
     }
-    this.filesChange.emit(this.files);
+    this.filesChange.emit(this.previews.map(p => p.file));
+    this.fileInput.nativeElement.value = '';
   }
 
   onDeleteImage(i: number) {
-    this.files.splice(i, 1);
     this.previews.splice(i, 1);
-    this.filesChange.emit(this.files);
+    this.filesChange.emit(this.previews.map(p => p.file));
   }
 }

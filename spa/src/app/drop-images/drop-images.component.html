@@ -12,7 +12,7 @@
           overflow: hidden;
           white-space: nowrap;"
         >
-          {{i+1}}. {{preview.name}}{{preview.name}}{{preview.name}}
+          {{i+1}}. {{preview.file.name}}
         </span>
         <svg (click)="onDeleteImage(i)"
           style="height: 2rem; width: 2rem;"
@@ -24,10 +24,12 @@
     </div>
   </div>
 
-    <div class="m-2 d-flex align-items-center justify-content-center" style="min-height: 150px; background-color: lightgray;" (click)="onClickFileInputButton()">
+    <div
+      class="m-2 d-flex align-items-center justify-content-center"
+      style="min-height: 150px; background-color: lightgray;"
+      (click)="onClickFileInputButton()"
+    >
       <input type="file" style="display: none" #fileInput accept="image/*" (change)="onChangeFileInput()" multiple />
-
-        <span>画像ファイルを追加</span>
-
+      <span>画像ファイルを追加</span>
     </div>
 </div>
