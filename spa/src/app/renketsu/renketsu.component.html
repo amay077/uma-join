@@ -21,7 +21,7 @@
     <div class="d-flex align-items-center justify-content-center">
       <span style="font-size: 0.9rem;">画像ファイルを数枚追加して 連結 を押してください。</span>
     </div>
-    <app-drop-images (files)="files"></app-drop-images>
+    <app-drop-images (filesChange)="files = $event"></app-drop-images>
 
     <!-- <div class="d-flex flex-column w-100 mb-2" style="border: 2px dashed gray;">
       <div [sortablejs]="previews" >
