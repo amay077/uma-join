@@ -1,3 +1,5 @@
+かんぜんに これ→ https://ssc.kitachan.black/ でいいじゃないですかああ！
+
 # uma-join ウマのステータス画像をよしなに連結するツール
 
 Try on https://amay077.github.io/uma-join/#/
