@@ -44,7 +44,7 @@ jobs:
       - run: git checkout publish --force
       - run: echo "生成した SPA を publish の docs にコピー"
       - run: rm -rf ./docs/*
-      - run: cp ./spa/dist/prod/* ./docs
+      - run: cp -r ./spa/dist/prod/* ./docs
 
       - run: echo "publish へ push してサイト更新"
       - run: git config --global user.email "bot@github.com"
