@@ -7,8 +7,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script>
-    window.app_ver = "0.7.4";
+    window.app_ver = "0.8.0";
   </script>
+  <script
+    async
+    src="https://docs.opencv.org/master/opencv.js"
+    onload="
+      if (typeof cv === 'undefined') {
+        setTimeout(initialize, 50);
+        return;
+      }
+      console.log('OpenCV.js is ready.');
+    "
+    type="text/javascript"
+  ></script>
+  <script type="text/javascript" src="assets/stitch.js"
+  onload="
+  console.log('stitch is ready.');
+  "
+  ></script>
+
 </head>
 <body>
   <app-root></app-root>

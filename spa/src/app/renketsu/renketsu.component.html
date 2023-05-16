@@ -54,17 +54,6 @@
 
   <div class="row mt-4">
 
-    <div hidden class="col-md-12 col-12 mb-3">
-      <select class="form-control" [(ngModel)]="accuracy" [disabled]="processing">
-        <option value="32">1 - 速度が少し上がるが、精度がすごく下がる</option>
-        <option value="20">2 - 速度がわずかに上がるが、精度が少し下がる</option>
-        <option value="12">3 - 普通の速度と精度</option>
-        <option value="4">4 - 速度が少し下がるが、精度がわずかに上がる</option>
-        <option value="1">5 - 速度がすごく下がるが、精度が少し上がる</option>
-      </select>
-
-    </div>
-
     <div class="col-md-4 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length >= 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
@@ -88,7 +77,12 @@
     </div>
   </div>
 
-  <div *ngIf="showDetails" class="row mb-2">
+  <div [ngStyle]="{ 'display': showDetails ? 'block' : 'none' }" class="row mb-2">
+    <div
+      id="logs"
+      style="display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap"
+    >aaa</div>
+
     <div *ngFor="let image of images" class="col-6">
       <span>{{image.tag}}</span>
       <img class="w-100" [src]="image.image">
@@ -100,5 +94,7 @@
       <img class="w-100" [src]="imageSrc">
     </div>
   </div>
+
+
 
 </div>
