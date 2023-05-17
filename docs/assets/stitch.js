@@ -13,7 +13,8 @@ function loadImageFromFileAsync(file) {
   });
 }
 
-async function join(files) {
+async function join(files, yRatio, heightRatio) {
+  no = 1;
   const src1 = await loadImageFromFileAsync(files[0]);
   const src2 = await loadImageFromFileAsync(files[1]);
 
@@ -21,9 +22,9 @@ async function join(files) {
   const width = src1.cols;
   const height = src1.rows;
 
-  const y = height / 2 + width * 0.62; // スキルの最終行のTOPらへん
+  const y = height / 2 + width * yRatio; // スキルの最終行のTOPらへん
   const wid = width * 0.95;
-  const hei = width * 0.11;
+  const hei = width * heightRatio;
   const template = src1.roi(new cv.Rect(0, y, wid, hei));
   destructions.push(template);
   addImage(template, 'テンプレート');
