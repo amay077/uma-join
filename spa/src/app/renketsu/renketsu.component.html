@@ -54,6 +54,19 @@
 
   <div class="row mt-4">
 
+    <div class="col-md-6 col-12">
+      <div class="input-group mb-3">
+        <span class="input-group-text" id="basic-addon1">Y位置</span>
+        <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="yRatio">
+      </div>
+    </div>
+    <div class="col-md-6 col-12">
+      <div class="input-group mb-3">
+        <span class="input-group-text" id="basic-addon1">高さ</span>
+        <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="heightRatio">
+      </div>
+    </div>
+
     <div class="col-md-4 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length >= 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
@@ -81,7 +94,7 @@
     <div
       id="logs"
       style="display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap"
-    >aaa</div>
+    ></div>
 
     <div *ngFor="let image of images" class="col-6">
       <span>{{image.tag}}</span>

@@ -12,6 +12,9 @@ import {  canvasToBlob } from '../logic/image-func';
 export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
+  yRatio = 0.62;
+  heightRatio = 0.11;
+
   processing = false;
   progress = 0;
   images: { tag: string, image: string }[] = [];
@@ -39,10 +42,14 @@ export class RenketsuComponent implements OnInit {
 
     try {
 
+      const divLogs: any = document.getElementById('logs');
+      for (const e of divLogs?.children ?? []) {
+        divLogs?.removeChild(e);
+      }
 
       // typescript のエラーを無視する
       // @ts-ignore
-      const canvas = await window.join(this.files);
+      const canvas = await window.join(this.files, this.yRatio, this.heightRatio);
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
       this.progress = 100;
