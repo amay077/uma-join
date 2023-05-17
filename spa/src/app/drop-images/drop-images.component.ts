@@ -45,4 +45,10 @@ export class DropImagesComponent implements OnInit {
     this.previews.splice(i, 1);
     this.filesChange.emit(this.previews.map(p => p.file));
   }
+
+  onClearImages() {
+    this.previews = [];
+    this.filesChange.emit([]);
+  }
+
 }
