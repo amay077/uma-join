@@ -13,7 +13,7 @@ function loadImageFromFileAsync(file) {
   });
 }
 
-async function join(files, yRatio, heightRatio) {
+async function join(files, options) {
   no = 1;
   const src1 = await loadImageFromFileAsync(files[0]);
   const src2 = await loadImageFromFileAsync(files[1]);
@@ -22,12 +22,28 @@ async function join(files, yRatio, heightRatio) {
   const width = src1.cols;
   const height = src1.rows;
 
-  const y = height / 2 + width * yRatio; // スキルの最終行のTOPらへん
-  const wid = width * 0.95;
-  const hei = width * heightRatio;
+  const u = width / 100;
+  console.log(`FIXME h_oku 後で消す -> join -> u:`, u);
+
+  // const y = height / 2 + width * options.yPos; // スキルの最終行のTOPらへん
+  const y = Math.floor((height / 2) + (u * options.yPos));
+  const wid = Math.floor(width * 0.95);
+  // const hei = width * options.height;
+  const hei = Math.floor(u * options.height);
+  console.log(`FIXME h_oku 後で消す -> join -> hei:`, hei);
+
+  // 矩形を描画します
+  const rectColor = new cv.Scalar(255, 0, 0);  // 赤色で矩形を描画します (BGR形式)
+  const rectThickness = 2;  // 矩形の線の太さを指定します
+  const templateRegion = src1.clone();
+  destructions.push(templateRegion);
+  cv.cvtColor(templateRegion, templateRegion, cv.COLOR_RGBA2RGB);
+  cv.rectangle(templateRegion, new cv.Point(0, y), new cv.Point(0 + wid, y + hei), rectColor, 3);
+  addImage(templateRegion, 'テンプレート領域');
+
   const template = src1.roi(new cv.Rect(0, y, wid, hei));
   destructions.push(template);
-  addImage(template, 'テンプレート');
+  // addImage(template, 'テンプレート');
 
   const result = templateMatching(template, src2);
   console.log(`result`, result);

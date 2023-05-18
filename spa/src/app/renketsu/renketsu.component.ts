@@ -12,8 +12,10 @@ import {  canvasToBlob } from '../logic/image-func';
 export class RenketsuComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
-  yRatio = 0.62;
-  heightRatio = 0.11;
+  options = {
+    yPos: 55,
+    height: 10
+  }
 
   processing = false;
   progress = 0;
@@ -27,6 +29,11 @@ export class RenketsuComponent implements OnInit {
 
   constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
+
+    const opStr = localStorage.getItem('options');
+    if (opStr != null) {
+      this.options = JSON.parse(opStr);
+    }
   }
 
   ngOnInit(): void { }
@@ -42,14 +49,19 @@ export class RenketsuComponent implements OnInit {
 
     try {
 
+      localStorage.setItem('options', JSON.stringify(this.options));
+
       const divLogs: any = document.getElementById('logs');
-      for (const e of divLogs?.children ?? []) {
+
+      let e = divLogs?.firstChild;
+      while (e != null) {
         divLogs?.removeChild(e);
+        e = divLogs?.firstChild;
       }
 
       // typescript のエラーを無視する
       // @ts-ignore
-      const canvas = await window.join(this.files, this.yRatio, this.heightRatio);
+      const canvas = await window.join(this.files, this.options);
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
       this.progress = 100;
