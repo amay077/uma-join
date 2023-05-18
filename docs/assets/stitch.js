@@ -14,9 +14,67 @@ function loadImageFromFileAsync(file) {
 }
 
 async function join(files, options) {
+  console.log(`FIXME h_oku 後で消す -> join -> files:`, files);
   no = 1;
-  const src1 = await loadImageFromFileAsync(files[0]);
-  const src2 = await loadImageFromFileAsync(files[1]);
+  const sources = [];
+  for (const file of files) {
+    sources.push(await loadImageFromFileAsync(file));
+  }
+
+  const results = [];
+  let lastCanvas;
+  for (let i = 0; i < sources.length - 1; i++) {
+    console.log(i, i+ 1);
+    lastCanvas = join2(sources[i], sources[i + 1], options, results);
+  }
+  results.push({ bottom: sources[sources.length - 1].rows });
+  console.log(`FIXME h_oku 後で消す -> results:`, results);
+
+  const res = results.reduce((pre, cur) => {
+    pre.arr.push({ y: pre.y, height: cur.bottom - pre.y });
+    pre.y = cur.top;
+    return pre;
+  }, { arr: [], y: 0 });
+  console.log(`FIXME h_oku 後で消す res -> res:`, res);
+
+  // 結合した画像を保存するための空のMatを作成
+  const width = sources[0].cols;
+  const dst = new cv.Mat(
+    res.arr.reduce((pre, cur) => pre + cur.height, 0),
+    width,
+    sources[0].type()
+  );
+  destructions.push(dst);
+  const rectColor = new cv.Scalar(255, 0, 0);  // 赤色で矩形を描画します (BGR形式)
+  cv.rectangle(dst, new cv.Point(0, 0), new cv.Point(dst.cols, dst.rows), rectColor, cv.FILLED);
+
+  let top = 0;
+  for (let i = 0; i < sources.length; i++) {
+    const src = sources[i];
+    const r = res.arr[i];
+
+    const roi = src.roi(new cv.Rect(0, r.y, width, r.height));
+    addImage(roi, `結合対象${i}`);
+    roi.copyTo(dst.rowRange(top, top + roi.rows));
+    top += r.height;
+    addImage(dst, `結合中${i}`);
+  }
+
+
+  const canvas = document.createElement('canvas');
+  cv.imshow(canvas, dst);
+  console.log(`finished`);
+
+  try {
+    for (const x of destructions) {
+      x?.delete();
+    }
+  } catch (error) {}
+
+  return canvas;
+}
+
+function join2(src1, src2, options, results) {
 
   // 元の画像の幅と高さを取得します
   const width = src1.cols;
@@ -34,7 +92,6 @@ async function join(files, options) {
 
   // 矩形を描画します
   const rectColor = new cv.Scalar(255, 0, 0);  // 赤色で矩形を描画します (BGR形式)
-  const rectThickness = 2;  // 矩形の線の太さを指定します
   const templateRegion = src1.clone();
   destructions.push(templateRegion);
   cv.cvtColor(templateRegion, templateRegion, cv.COLOR_RGBA2RGB);
@@ -52,38 +109,34 @@ async function join(files, options) {
   const roiA = new cv.Rect(0, 0, width, y);
   const roiB = new cv.Rect(0, result.lt.y, width, height - result.lt.y);
 
-  // 結合領域の画像を切り出し
-  const imgROI_A = src1.roi(roiA);
-  addImage(imgROI_A, '切り抜き範囲1');
-  const imgROI_B = src2.roi(roiB);
-  addImage(imgROI_B, '切り抜き範囲2');
+  // // 結合領域の画像を切り出し
+  // const imgROI_A = src1.roi(roiA);
+  // addImage(imgROI_A, '切り抜き範囲1');
+  // const imgROI_B = src2.roi(roiB);
+  // addImage(imgROI_B, '切り抜き範囲2');
 
-  // 結合した画像を保存するための空のMatを作成
-  const dst = new cv.Mat(
-    imgROI_A.rows + imgROI_B.rows,
-    imgROI_A.cols,
-    imgROI_A.type()
-  );
+  results.push({ bottom: y, top: result.lt.y });
 
-  // 2つの画像を縦に結合する
-  imgROI_A.copyTo(dst.rowRange(0, imgROI_A.rows));
-  imgROI_B.copyTo(dst.rowRange(imgROI_A.rows, imgROI_A.rows + imgROI_B.rows));
+  // // 結合した画像を保存するための空のMatを作成
+  // const dst = new cv.Mat(
+  //   imgROI_A.rows + imgROI_B.rows,
+  //   imgROI_A.cols,
+  //   imgROI_A.type()
+  // );
 
-  destructions.push(dst);
-  addImage(dst, '結合結果');
+  // // 2つの画像を縦に結合する
+  // imgROI_A.copyTo(dst.rowRange(0, imgROI_A.rows));
+  // imgROI_B.copyTo(dst.rowRange(imgROI_A.rows, imgROI_A.rows + imgROI_B.rows));
 
-  const canvas = document.createElement('canvas');
-  cv.imshow(canvas, dst);
+  // destructions.push(dst);
+  // addImage(dst, '結合結果');
 
-  console.log(`finished`);
+  // const canvas = document.createElement('canvas');
+  // cv.imshow(canvas, dst);
 
-  try {
-    for (const x of destructions) {
-      x?.delete();
-    }
-  } catch (error) {}
+  // console.log(`finished`);
 
-  return canvas;
+  // return canvas;
 }
 
 function templateMatching(template, target) {
