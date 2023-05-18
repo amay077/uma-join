@@ -123,6 +123,7 @@ export class RenketsuComponent implements OnInit {
     this.imageSrc = '';
     this.progress = 0;
     this.processing = false;
+    this.showDetails = false;
   }
 }
 

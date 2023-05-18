@@ -33,14 +33,18 @@
       <div class="row">
         <div class="col-md-6 col-12">
           <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1">Y位置</span>
-            <input type="number" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.yPos">
+            <div class="input-group-prepend">
+              <span class="input-group-text" style="width: 5rem;">Y位置</span>
+            </div>
+            <input type="number" class="form-control" [(ngModel)]="options.yPos">
           </div>
         </div>
         <div class="col-md-6 col-12">
           <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1">高さ</span>
-            <input type="number" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.height">
+            <div class="input-group-prepend">
+              <span class="input-group-text" style="width: 5rem;">高さ</span>
+            </div>
+            <input type="number" class="form-control" [(ngModel)]="options.height">
           </div>
         </div>
       </div>
