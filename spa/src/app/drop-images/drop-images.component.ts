@@ -8,8 +8,8 @@ import { loadImageAsDataURL } from '../logic/image-func';
 })
 export class DropImagesComponent implements OnInit {
 
-  @Output()
-  readonly filesChange = new EventEmitter<File[]>();
+  @Output() readonly filesChange = new EventEmitter<File[]>();
+  @Output() readonly clear = new EventEmitter<void>();
 
   previews: { file: File, src: string }[] = [];
 
@@ -49,6 +49,7 @@ export class DropImagesComponent implements OnInit {
   onClearImages() {
     this.previews = [];
     this.filesChange.emit([]);
+    this.clear.emit();
   }
 
 }

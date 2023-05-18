@@ -23,6 +23,7 @@ export class RenketsuComponent implements OnInit {
   imageSrc = '';
 
   showDetails = false;
+  showDetailSettings = false;
 
   files: File[] = [];
   private imageBlob: Blob | null = null;
@@ -38,6 +39,15 @@ export class RenketsuComponent implements OnInit {
 
   ngOnInit(): void { }
 
+  private clearDetails() {
+    const divLogs: any = document.getElementById('logs');
+    let e = divLogs?.firstChild;
+    while (e != null) {
+      divLogs?.removeChild(e);
+      e = divLogs?.firstChild;
+    }
+  }
+
   async onJoin() {
     this.files
     console.log(`${this.constructor.name} ~ onJoin ~ this.files`, this.files);
@@ -51,13 +61,7 @@ export class RenketsuComponent implements OnInit {
 
       localStorage.setItem('options', JSON.stringify(this.options));
 
-      const divLogs: any = document.getElementById('logs');
-
-      let e = divLogs?.firstChild;
-      while (e != null) {
-        divLogs?.removeChild(e);
-        e = divLogs?.firstChild;
-      }
+      this.clearDetails();
 
       // typescript のエラーを無視する
       // @ts-ignore
@@ -111,6 +115,14 @@ export class RenketsuComponent implements OnInit {
     } catch (error) {
       console.log(`${this.constructor.name} ~ onShare ~ error`, error);
     }
+  }
+
+  onClear() {
+    this.clearDetails();
+    this.imageBlob = null;
+    this.imageSrc = '';
+    this.progress = 0;
+    this.processing = false;
   }
 }
 

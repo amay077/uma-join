@@ -17,11 +17,11 @@
       <div style="width: 90%; position: relative;">
         <img style="width: 100%;" [src]="preview.src" class="preview">
 
-        <span class="handle" style="position: absolute; top: 0; left: 0; margin: 2px; background-color: rgb(255, 255, 255, 0.8);">
+        <span class="handle" style="cursor: grab; position: absolute; top: 0; left: 0; margin: 2px; background-color: rgb(255, 255, 255, 0.8);">
           <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 96 960 960" width="24" height="24"><path d="M281 736 121 576l160-160 43 43-88 87h489l-87-88 42-42 160 160-160 160-42-42 87-88-489 1 87 87-42 42Z"/></svg>
         </span>
 
-        <div style="position: absolute; bottom: 0; right: 0; z-index: 1; height: 2rem; width: 2rem; margin: 2px;  background-color: rgb(255, 255, 255, 0.4);">
+        <div style="cursor: pointer; position: absolute; bottom: 0; right: 0; z-index: 1; height: 2rem; width: 2rem; margin: 2px;  background-color: rgb(255, 255, 255, 0.4);">
           <svg
             (click)="onDeleteImage(i)"
             xmlns="http://www.w3.org/2000/svg"  class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -43,7 +43,7 @@
         <button class="btn btn-lg btn-block btn-primary" (click)="onClickFileInputButton()"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp;画像を追加</button>
       </div>
       <div style="width: 30%; padding-left: 8px;">
-        <button class="btn btn-lg btn-block btn-secondary" (click)="onClearImages()">クリア</button>
+        <button [disabled]="previews.length == 0" class="btn btn-lg btn-block btn-secondary" (click)="onClearImages()">クリア</button>
       </div>
 
     </div>

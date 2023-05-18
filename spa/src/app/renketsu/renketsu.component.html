@@ -5,69 +5,48 @@
   </div>
 </div>
 
-<div class="container">
-  <!-- <div class="row">
-    <div class="col-12 mb-4">
-      <ngx-dropzone (change)="onSelect($event)" [disabled]="processing">
-        <ngx-dropzone-label>ウマ画像ファイルを追加</ngx-dropzone-label>
-        <ngx-dropzone-image-preview [removable]="true" (removed)="onRemove(f)" ngProjectAs="ngx-dropzone-preview" *ngFor="let f of files" [file]="f">
-        </ngx-dropzone-image-preview>
-      </ngx-dropzone>
-
-    </div>
-  </div> -->
-
+<div class="container mb-4">
   <div>
     <div class="d-flex align-items-center justify-content-center">
       <span style="font-size: 0.9rem;">画像ファイルを数枚追加して 連結 を押してください。</span>
     </div>
-    <app-drop-images (filesChange)="files = $event"></app-drop-images>
-
-    <!-- <div class="d-flex flex-column w-100 mb-2" style="border: 2px dashed gray;">
-      <div [sortablejs]="previews" >
-        <div class="px-4 m-4" *ngFor="let preview of previews; let i = index;">
-          <div class="d-flex flex-row align-items-center">
-            <span class="w-100" style="
-              max-width: 100%;
-              text-overflow: ellipsis;
-              overflow: hidden;
-              white-space: nowrap;"
-            >
-              {{i+1}}. {{preview.name}}{{preview.name}}{{preview.name}}
-            </span>
-            <i class="fa fa-times ml-1" aria-hidden="true" (click)="onDeleteImage(i)"></i>
-          </div>
-          <img style="width: 100%;" [src]="preview.src" class="preview">
-        </div>
-      </div>
-
-        <div class="m-2 d-flex align-items-center justify-content-center" style="min-height: 150px; background-color: lightgray;" (click)="onClickFileInputButton()">
-          <input type="file" style="display: none" #fileInput accept="image/*" (change)="onChangeFileInput()" multiple />
-
-            <span>画像ファイルを追加</span>
-
-        </div>
-    </div> -->
+    <app-drop-images (filesChange)="files = $event" (clear)="onClear()"></app-drop-images>
 
   </div>
 
-
   <div class="row mt-4">
-
-    <div class="col-md-6 col-12">
-      <div class="input-group mb-3">
-        <span class="input-group-text" id="basic-addon1">Y位置</span>
-        <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.yPos">
+    <div class="col-12">
+      <div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" id="checkForDetails" [(ngModel)]="showDetailSettings">
+        <label class="form-check-label" for="checkForDetails">詳細設定</label>
       </div>
     </div>
-    <div class="col-md-6 col-12">
-      <div class="input-group mb-3">
-        <span class="input-group-text" id="basic-addon1">高さ</span>
-        <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.height">
+  </div>
+
+  <div class="row" >
+    <div class="col-12" *ngIf="showDetailSettings">
+      <div class="row">
+        <div class="col-12 mb-2">
+          <span class="h5">テンプレート領域の位置と高さ</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 col-12">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">Y位置</span>
+            <input type="number" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.yPos">
+          </div>
+        </div>
+        <div class="col-md-6 col-12">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">高さ</span>
+            <input type="number" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1" [(ngModel)]="options.height">
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="col-md-4 col-12 mb-3">
+    <div class="col-md-8 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length >= 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
           <div class="spinner-border spinner-border-sm" role="status"></div>
@@ -80,32 +59,38 @@
     </div>
 
     <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''"  (click)="onDownload()"><i class="fa fa-download" aria-hidden="true"></i>&nbsp;ダウンロード</button>
-    </div>
-    <div class="col-md-4 col-12 mb-3">
-      <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''" *ngIf="canShare"  (click)="onShare()"><i class="fa fa-share-alt" aria-hidden="true"></i>&nbsp;シェア</button>
-    </div>
-    <div class="col-md-4 col-12 mb-3">
       <button class="btn btn-lg btn-block btn-primary" [disabled]="imageSrc == ''"  (click)="showDetails = !showDetails ">経過を{{showDetails ? '非表示' : '表示'}}</button>
     </div>
   </div>
 
   <div [ngStyle]="{ 'display': showDetails ? 'block' : 'none' }" class="row mb-2">
-    <div
-      id="logs"
-      style="display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap"
-    ></div>
-
-    <div *ngFor="let image of images" class="col-6">
-      <span>{{image.tag}}</span>
-      <img class="w-100" [src]="image.image">
+    <div class="col-12 d-flex flex-column">
+      <span class="h4">途中経過</span>
+      <div
+        id="logs"
+        style="display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap; border: 2px dashed gray; padding: 8px;"
+      ></div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-12">
-      <img class="w-100" [src]="imageSrc">
+  <div class="row mt-4" *ngIf="imageSrc != ''">
+    <div class="col-md-8 col-12 mb-2">
+      <span class="h4">結果</span>
     </div>
+    <div class="col-md-4 col-12 mb-2">
+      <button class="btn btn-block btn-primary" [disabled]="imageSrc == ''"  (click)="onDownload()"><i class="fa fa-download" aria-hidden="true"></i>&nbsp;ダウンロード</button>
+    </div>
+
+    <div class="col-md-2 col-12"></div>
+
+    <div class="col-md-8 col-12 d-flex flex-column">
+      <div style="border: 2px dashed gray; padding: 8px;">
+        <img class="w-100"  [src]="imageSrc">
+      </div>
+    </div>
+
+    <div class="col-md-2 col-12"></div>
+
   </div>
 
 
