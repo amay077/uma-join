@@ -54,7 +54,7 @@
       <button class="btn btn-lg btn-block btn-primary"  [disabled]="!(files.length >= 2 && !processing)" (click)="onJoin()">
         <span *ngIf="processing">
           <div class="spinner-border spinner-border-sm" role="status"></div>
-          {{progress}}%
+          処理中...
         </span>
         <span *ngIf="!processing">
           <i class="fa fa-play" aria-hidden="true"></i>&nbsp;連結!!
