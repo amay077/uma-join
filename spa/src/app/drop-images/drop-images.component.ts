@@ -32,11 +32,15 @@ export class DropImagesComponent implements OnInit {
   }
 
   async onChangeFileInput(): Promise<void> {
-    const files: { [key: string]: File } = this.fileInput.nativeElement.files;
-    for (const file of Object.values(files)) {
+    const inputs: { [key: string]: File } = this.fileInput.nativeElement.files;
+    const files = Object.values(inputs);
+    files.sort((a, b) => a.name < b.name ? -1 : 1);
+
+    for (const file of files) {
       const url = await loadImageAsDataURL(file)
       this.previews.push({ file, src: url });
     }
+
     this.filesChange.emit(this.previews.map(p => p.file));
     this.fileInput.nativeElement.value = '';
   }
