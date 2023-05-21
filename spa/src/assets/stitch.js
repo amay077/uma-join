@@ -13,29 +13,32 @@ function loadImageFromFileAsync(file) {
   });
 }
 
-async function join(files, options) {
-  console.log(`FIXME h_oku 後で消す -> join -> files:`, files);
+async function join(files, options, refFile) {
+  console.log(`FIXME  後で消す -> join -> files:`, files);
   no = 1;
   const sources = [];
   for (const file of files) {
     sources.push(await loadImageFromFileAsync(file));
   }
 
+  const finderMat = await loadImageFromFileAsync(refFile)
+  destructions.push(finderMat);
+
   const results = [];
   let lastCanvas;
   for (let i = 0; i < sources.length - 1; i++) {
     console.log(i, i+ 1);
-    lastCanvas = join2(sources[i], sources[i + 1], options, results);
+    lastCanvas = join2(sources[i], sources[i + 1], options, results, finderMat);
   }
   results.push({ bottom: sources[sources.length - 1].rows });
-  console.log(`FIXME h_oku 後で消す -> results:`, results);
+  console.log(`FIXME  後で消す -> results:`, results);
 
   const res = results.reduce((pre, cur) => {
     pre.arr.push({ y: pre.y, height: cur.bottom - pre.y });
     pre.y = cur.top;
     return pre;
   }, { arr: [], y: 0 });
-  console.log(`FIXME h_oku 後で消す res -> res:`, res);
+  console.log(`FIXME  後で消す res -> res:`, res);
 
   // 結合した画像を保存するための空のMatを作成
   const width = sources[0].cols;
@@ -74,21 +77,47 @@ async function join(files, options) {
   return canvas;
 }
 
-function join2(src1, src2, options, results) {
+function join2(src1, src2, options, results, refMat) {
 
   // 元の画像の幅と高さを取得します
   const width = src1.cols;
   const height = src1.rows;
 
+  let resultTemplate = null;
+  try {
+    const scale = src1.cols / refMat.cols;
+    const roiReference = refMat.roi(new cv.Rect(0, 2000, refMat.cols, 200));
+    const newHeight = Math.round(roiReference.rows * scale);
+    const newWidth = Math.round(roiReference.cols * scale);
+    const resizedRef = new cv.Mat();
+    destructions.push(resizedRef);
+    cv.resize(
+      roiReference,
+      resizedRef,
+      new cv.Size(newWidth, newHeight),
+      0,
+      0,
+      cv.INTER_LINEAR
+    );
+    addImage(resizedRef, 'リファレンス画像');
+    resultTemplate = templateMatching(resizedRef, src1, 'リファレンス画像マッチング結果');
+  } catch (error) {
+    console.log(`FIXME ${this.constructor.name} -> join2 -> error:`, error);
+  }
+
   const u = width / 100;
-  console.log(`FIXME h_oku 後で消す -> join -> u:`, u);
 
   // const y = height / 2 + width * options.yPos; // スキルの最終行のTOPらへん
-  const y = Math.floor((height / 2) + (u * options.yPos));
+  let y = Math.floor((height / 2) + (u * options.yPos));
   const wid = Math.floor(width * 0.95);
   // const hei = width * options.height;
-  const hei = Math.floor(u * options.height);
-  console.log(`FIXME h_oku 後で消す -> join -> hei:`, hei);
+  let hei = Math.floor(u * options.height);
+  console.log(`FIXME  後で消す -> join -> hei:`, hei);
+
+
+  if (resultTemplate?.lt?.y != null) {
+    y = resultTemplate.lt.y - hei;
+  }
 
   // 矩形を描画します
   const rectColor = new cv.Scalar(255, 0, 0);  // 赤色で矩形を描画します (BGR形式)
@@ -108,38 +137,10 @@ function join2(src1, src2, options, results) {
   // 画像の結合領域を指定
   const roiA = new cv.Rect(0, 0, width, y);
   const roiB = new cv.Rect(0, result.lt.y, width, height - result.lt.y);
-
-  // // 結合領域の画像を切り出し
-  // const imgROI_A = src1.roi(roiA);
-  // addImage(imgROI_A, '切り抜き範囲1');
-  // const imgROI_B = src2.roi(roiB);
-  // addImage(imgROI_B, '切り抜き範囲2');
-
   results.push({ bottom: y, top: result.lt.y });
-
-  // // 結合した画像を保存するための空のMatを作成
-  // const dst = new cv.Mat(
-  //   imgROI_A.rows + imgROI_B.rows,
-  //   imgROI_A.cols,
-  //   imgROI_A.type()
-  // );
-
-  // // 2つの画像を縦に結合する
-  // imgROI_A.copyTo(dst.rowRange(0, imgROI_A.rows));
-  // imgROI_B.copyTo(dst.rowRange(imgROI_A.rows, imgROI_A.rows + imgROI_B.rows));
-
-  // destructions.push(dst);
-  // addImage(dst, '結合結果');
-
-  // const canvas = document.createElement('canvas');
-  // cv.imshow(canvas, dst);
-
-  // console.log(`finished`);
-
-  // return canvas;
 }
 
-function templateMatching(template, target) {
+function templateMatching(template, target, comment) {
   const dst = new cv.Mat();
   const mask = new cv.Mat();
   destructions.push(...[dst, mask]);
@@ -160,7 +161,7 @@ function templateMatching(template, target) {
   const temp = target.clone();
   destructions.push(temp);
   cv.rectangle(temp, lt, rb, color, 2, cv.LINE_8, 0);
-  addImage(temp, 'テンプレートマッチング結果');
+  addImage(temp, comment ?? 'テンプレートマッチング結果');
 
   return { lt, rb };
 }

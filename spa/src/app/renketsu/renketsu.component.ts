@@ -63,9 +63,11 @@ export class RenketsuComponent implements OnInit {
 
       this.clearDetails();
 
+      const refFile = await loadImageFromUrl('./assets/reference.png');
+
       // typescript のエラーを無視する
       // @ts-ignore
-      const canvas = await window.join(this.files, this.options);
+      const canvas = await window.join(this.files, this.options, refFile);
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
       this.progress = 100;
@@ -169,3 +171,15 @@ const toBlob = (base64: string) => {
     return null;
   }
 };
+
+
+async function loadImageFromUrl(url: string): Promise<File> {
+  const response = await fetch(url);
+  if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const blob = await response.blob();
+  const file = new File([blob], "image.png", {type: blob.type});
+
+  return file;
+}
