@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import {  canvasToBlob } from '../logic/image-func';
+import { join } from './stitch';
 
 @Component({
   selector: 'app-renketsu',
@@ -67,7 +68,7 @@ export class RenketsuComponent implements OnInit {
 
       // typescript のエラーを無視する
       // @ts-ignore
-      const canvas = await window.join(this.files, this.options, refFile);
+      const canvas = await join(this.files, this.options, refFile);
       this.imageSrc = canvas.toDataURL('image/png');
       this.imageBlob = await canvasToBlob(canvas, 'image/png');
       this.progress = 100;
