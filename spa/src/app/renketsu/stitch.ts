@@ -2,7 +2,7 @@ declare const cv: any;
 
 const destructions: any[] = [];
 
-function loadImageFromFileAsync(file: File) {
+function loadImageFromFileAsync(file: File): Promise<any> {
   return new Promise((resolve) => {
     const img = new Image();
 
@@ -16,7 +16,7 @@ function loadImageFromFileAsync(file: File) {
 }
 
 export async function join(files: File[], options: any, refFile: File) {
-  console.log(`FIXME  後で消す -> join -> files:`, files);
+  console.log(`join -> files:`, files);
   no = 1;
   const sources: any[] = [];
   for (const file of files) {
@@ -33,14 +33,14 @@ export async function join(files: File[], options: any, refFile: File) {
     lastCanvas = joinInner(sources[i], sources[i + 1], options, results, finderMat);
   }
   results.push({ bottom: sources[sources.length - 1].rows });
-  console.log(`FIXME  後で消す -> results:`, results);
+  console.log(`join -> results:`, results);
 
   const res = results.reduce((pre, cur) => {
     pre.arr.push({ y: pre.y, height: cur.bottom - pre.y });
     pre.y = cur.top ?? 0;
     return pre;
   }, { arr: [], y: 0 } as { arr: { y: number, height: number }[], y: number });
-  console.log(`FIXME  後で消す res -> res:`, res);
+  console.log(`join -> res:`, res);
 
   // 結合した画像を保存するための空のMatを作成
   const width = sources[0].cols;
@@ -83,7 +83,7 @@ export async function join(files: File[], options: any, refFile: File) {
   // 上部を削除
   const resultMatchingTop = matchingToReferenceTop(dst, finderMat);
   if (resultMatchingTop != null) {
-    console.log(`FIXME 後で消す join -> resultMatchingTop:`, resultMatchingTop);
+    console.log(`join -> resultMatchingTop:`, resultMatchingTop);
     const dstCroped = new cv.Mat(
       dst.rows - resultMatchingTop.lt.y,
       dst.cols,
@@ -129,7 +129,7 @@ function matchingToReferenceBottom(srcMat: any, referenceMat: any) {
     addImage(resizedMat, 'リファレンス画像(下)');
     return templateMatching(resizedMat, srcMat, 'リファレンス画像(下)マッチング結果');
   } catch (error) {
-    console.log(`FIXME join2 -> error:`, error);
+    console.log(`FIXME matchingToReferenceBottom -> error:`, error);
     return null;
   }
 }
@@ -153,7 +153,7 @@ function matchingToReferenceTop(srcMat: any, referenceMat: any) {
     addImage(resizedMat, 'リファレンス画像(上)');
     return templateMatching(resizedMat, srcMat, 'リファレンス画像(上)マッチング結果');
   } catch (error) {
-    console.log(`FIXME join2 -> error:`, error);
+    console.log(`matchingToReferenceTop -> error:`, error);
     return null;
   }
 }
@@ -171,9 +171,8 @@ function joinInner(src1: any, src2: any, options: any, results: { bottom: number
   // const y = height / 2 + width * options.yPos; // スキルの最終行のTOPらへん
   let y = Math.floor((height / 2) + (u * options.yPos));
   const wid = Math.floor(width * 0.95);
-  // const hei = width * options.height;
-  let hei = Math.floor(u * options.height);
-  console.log(`FIXME  後で消す -> join -> hei:`, hei);
+  const hei = Math.floor(u * options.height);
+  console.log(`joinInner -> hei:`, hei);
 
 
   if (resultTemplate?.lt?.y != null) {
