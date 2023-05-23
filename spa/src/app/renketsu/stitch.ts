@@ -66,23 +66,23 @@ export async function join(files: File[], options: any, refFile: File) {
   }
 
   // 下部を削除
-  const resultMatching = matchingToReferenceBottom(dst, finderMat);
-  if (resultMatching != null) {
-    console.log(`FIXME 後で消す join -> resultMatching:`, resultMatching);
+  const resultMatchingBottom = matchingToReferenceBottom(dst, finderMat);
+  if (resultMatchingBottom != null && resultMatchingBottom.score > 0.9) {
+    console.log(`FIXME 後で消す join -> resultMatching:`, resultMatchingBottom);
     const dstCroped = new cv.Mat(
-      resultMatching.lt.y,
+      resultMatchingBottom.lt.y,
       dst.cols,
       dst.type()
     );
     destructions.push(dstCroped);
-    dst.copyTo(dstCroped.rowRange(0, resultMatching.lt.y));
+    dst.copyTo(dstCroped.rowRange(0, resultMatchingBottom.lt.y));
     addImage(dstCroped, `下部削除結果`);
     dst = dstCroped;
   }
 
   // 上部を削除
   const resultMatchingTop = matchingToReferenceTop(dst, finderMat);
-  if (resultMatchingTop != null) {
+  if (resultMatchingTop != null && resultMatchingTop.score > 0.9) {
     console.log(`join -> resultMatchingTop:`, resultMatchingTop);
     const dstCroped = new cv.Mat(
       dst.rows - resultMatchingTop.lt.y,
@@ -200,13 +200,13 @@ function joinInner(src1: any, src2: any, options: any, results: { bottom: number
   results.push({ bottom: y, top: result.lt.y });
 }
 
-function templateMatching(template: any, target: any, comment?: string): { lt: {x: number, y: number}, rb: {x: number, y: number} } {
+function templateMatching(template: any, target: any, comment?: string): { lt: {x: number, y: number}, rb: {x: number, y: number}, score: number } {
   const dst = new cv.Mat();
   const mask = new cv.Mat();
   destructions.push(...[dst, mask]);
 
   // テンプレートマッチングを実行
-  cv.matchTemplate(template, target, dst, cv.TM_CCOEFF, mask);
+  cv.matchTemplate(template, target, dst, cv.TM_CCOEFF_NORMED, mask);
 
   // 最大/最小のスコアとその位置を取得
   const result = cv.minMaxLoc(dst, mask);
@@ -227,9 +227,9 @@ function templateMatching(template: any, target: any, comment?: string): { lt: {
   const rbInset = { x: rb.x - thickness, y: rb.y - thickness };
 
   cv.rectangle(temp, ltInset, rbInset, color, thickness, cv.LINE_8, 0);
-  addImage(temp, comment ?? 'テンプレートマッチング結果');
+  addImage(temp, (comment ?? 'テンプレートマッチング結果') + `/スコア:${Math.floor(result.maxVal * 100)}`);
 
-  return { lt, rb };
+  return { lt, rb, score: result.maxVal };
 }
 
 
