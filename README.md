@@ -23,8 +23,8 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
   <tr><th>入力</th><th>結果</th></tr>
   <tr>
     <td>
-        <img style="width: 30%" src="images/samples/status/Screenshot_20230517-194051.png"/>
-        <img style="width: 30%" src="images/samples/status/Screenshot_20230517-194056.png"/>
+        <img style="width: 45%" src="images/samples/status/Screenshot_20230517-194051.png"/>
+        <img style="width: 45%" src="images/samples/status/Screenshot_20230517-194056.png"/>
     </td>
     <td>
       <img style="width: 100%" src="images/samples/status/image-2023-05-23T09_43_09.392Z.png">
@@ -38,10 +38,10 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
   <tr><th>入力</th><th>結果</th></tr>
   <tr>
     <td>
-        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191627.png"/>
-        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191633.png"/>
-        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191642.png"/>
-        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191648.png"/>
+        <img style="width: 24%" src="images/samples/skill/Screenshot_20230518-191627.png"/>
+        <img style="width: 24%" src="images/samples/skill/Screenshot_20230518-191633.png"/>
+        <img style="width: 24%" src="images/samples/skill/Screenshot_20230518-191642.png"/>
+        <img style="width: 24%" src="images/samples/skill/Screenshot_20230518-191648.png"/>
     </td>
     <td>
       <img style="width: 100%" src="images/samples/skill/image-2023-05-23T10_02_04.205Z.png">
@@ -55,18 +55,17 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
   <tr><th>入力</th><th>結果</th></tr>
   <tr>
     <td>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125828.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125836.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125843.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125849.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125856.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125903.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125911.png"/>
-        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125918.png"/>
-
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125828.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125836.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125843.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125849.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125856.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125903.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125911.png"/>
+        <img style="width: 24%" src="images/samples/race/Screenshot_20230523-125918.png"/>
     </td>
     <td>
-      <img style="width: 100%" src="images/samples/race/image-2023-05-23T10_07_41.411Z.png">
+      <img style="width: 100%" src="images/samples/race/image-2023-05-23T10_07_41.411Z.png"/>
     </td>
   </tr>
 </table>
