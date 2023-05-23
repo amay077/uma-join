@@ -67,7 +67,7 @@ export async function join(files: File[], options: any, refFile: File) {
 
   // 下部を削除
   const resultMatchingBottom = matchingToReferenceBottom(dst, finderMat);
-  if (resultMatchingBottom != null && resultMatchingBottom.score > 0.9) {
+  if (resultMatchingBottom != null && resultMatchingBottom.score > 0.8) {
     console.log(`FIXME 後で消す join -> resultMatching:`, resultMatchingBottom);
     const dstCroped = new cv.Mat(
       resultMatchingBottom.lt.y,
@@ -82,7 +82,7 @@ export async function join(files: File[], options: any, refFile: File) {
 
   // 上部を削除
   const resultMatchingTop = matchingToReferenceTop(dst, finderMat);
-  if (resultMatchingTop != null && resultMatchingTop.score > 0.9) {
+  if (resultMatchingTop != null && resultMatchingTop.score > 0.8) {
     console.log(`join -> resultMatchingTop:`, resultMatchingTop);
     const dstCroped = new cv.Mat(
       dst.rows - resultMatchingTop.lt.y,
@@ -164,7 +164,7 @@ function joinInner(src1: any, src2: any, options: any, results: { bottom: number
   const width = src1.cols;
   const height = src1.rows;
 
-  const resultTemplate = matchingToReferenceBottom(src1, refMat);
+  const matchingResult = matchingToReferenceBottom(src1, refMat);
 
   const u = width / 100;
 
@@ -175,8 +175,8 @@ function joinInner(src1: any, src2: any, options: any, results: { bottom: number
   console.log(`joinInner -> hei:`, hei);
 
 
-  if (resultTemplate?.lt?.y != null) {
-    y = resultTemplate.lt.y - hei;
+  if (matchingResult != null && matchingResult.score > 0.8) {
+    y = matchingResult.lt.y - hei;
   }
 
   // 矩形を描画します
