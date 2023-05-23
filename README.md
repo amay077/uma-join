@@ -70,6 +70,13 @@
   </tr>
 </table>
 
+## 動作確認環境
+
+- Xperia 1 II + Edge/Chrome
+- Pixel6a + Edge/Chrome
+- iPad mini(第6世代) + Edge/Chrome/Safari
+- Mac + Edge/Chrome/Safari
+
 ## 期待した結合結果が得られない場合
 
 1. 「経過を表示」を押すと、結合処理過程の画像群が表示されます。
