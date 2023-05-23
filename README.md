@@ -4,9 +4,9 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
 
 こちら→ https://amay077.github.io/uma-join/#/
 
-<div style="display: flex; flex-direction: column">
-  <img src="https://github.com/amay077/uma-join/assets/401369/c3d457d8-3a93-4011-ad03-9ab01af250b5">
-  <img src="https://github.com/amay077/uma-join/assets/401369/6ae49d0f-aeff-4173-9200-bd88e97a8c34">
+<div style="display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap;">
+  <img src="images/screen1.png">
+  <img src="images/screen2.png">
 </div>
 
 ## 使い方
@@ -19,10 +19,57 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
 
 ### 1. ステータス画面
 
+<table>
+  <tr><th>入力</th><th>結果</th></tr>
+  <tr>
+    <td>
+        <img style="width: 30%" src="images/samples/status/Screenshot_20230517-194051.png"/>
+        <img style="width: 30%" src="images/samples/status/Screenshot_20230517-194056.png"/>
+    </td>
+    <td>
+      <img style="width: 100%" src="images/samples/status/image-2023-05-23T09_43_09.392Z.png">
+    </td>
+  </tr>
+</table>
+
 ### 2. 因子画面
+
+<table>
+  <tr><th>入力</th><th>結果</th></tr>
+  <tr>
+    <td>
+        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191627.png"/>
+        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191633.png"/>
+        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191642.png"/>
+        <img style="width: 30%" src="images/samples/skill/Screenshot_20230518-191648.png"/>
+    </td>
+    <td>
+      <img style="width: 100%" src="images/samples/skill/image-2023-05-23T10_02_04.205Z.png">
+    </td>
+  </tr>
+</table>
 
 ### 3. レース出走画面
 
+<table>
+  <tr><th>入力</th><th>結果</th></tr>
+  <tr>
+    <td>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125828.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125836.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125843.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125849.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125856.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125903.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125911.png"/>
+        <img style="width: 30%" src="images/samples/race/Screenshot_20230523-125918.png"/>
+
+    </td>
+    <td>
+      <img style="width: 100%" src="images/samples/race/image-2023-05-23T10_07_41.411Z.png">
+    </td>
+  </tr>
+</table>
 
 ## 期待した結合結果が得られない場合
 
@@ -38,3 +85,5 @@ ssc.kitachan.black が残念ながら公開停止してしまったので開発�
 4. このアプリのバージョン
 
 などをお知らせください。
+
+end of contents.
