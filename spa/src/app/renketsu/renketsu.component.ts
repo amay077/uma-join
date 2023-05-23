@@ -32,7 +32,7 @@ export class RenketsuComponent implements OnInit {
   constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
 
-    const opStr = localStorage.getItem('options');
+    const opStr = localStorage.getItem('umajoin-options');
     if (opStr != null) {
       this.options = JSON.parse(opStr);
     }
@@ -60,7 +60,7 @@ export class RenketsuComponent implements OnInit {
 
     try {
 
-      localStorage.setItem('options', JSON.stringify(this.options));
+      localStorage.setItem('umajoin-options', JSON.stringify(this.options));
 
       this.clearDetails();
 
