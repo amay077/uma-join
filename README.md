@@ -74,6 +74,7 @@
 
 - Xperia 1 II + Edge/Chrome
 - Pixel6a + Edge/Chrome
+- iPhone12 mini + Edge/Chrome/Safari
 - iPad mini(第6世代) + Edge/Chrome/Safari
 - Mac + Edge/Chrome/Safari
 
