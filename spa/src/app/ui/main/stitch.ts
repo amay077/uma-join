@@ -251,3 +251,21 @@ function addImage(image: any, label: string) {
   cv.imshow(canvas, image);
   no++;
 }
+
+export function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
+  return new Promise<Blob>(resolve => {
+    canvas.toBlob(blob => {
+      resolve(blob!)
+    }, type);
+  });
+}
+
+export function loadImageAsDataURL(blob: Blob): Promise<string> {
+  return new Promise<string>(resolve => {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      resolve(e.target.result);
+    };
+    reader.readAsDataURL(blob);
+  })
+}

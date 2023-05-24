@@ -2,20 +2,19 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';    // add
 import { BrowserModule } from '@angular/platform-browser';
-// import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgxDropzoneModule } from 'ngx-dropzone';
 import { ToastrModule } from 'ngx-toastr';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { RenketsuComponent } from './renketsu/renketsu.component';
+import { MainComponent } from './ui/main/main.component';
 import { SortablejsModule } from 'ngx-sortablejs';
-import { DropImagesComponent } from './drop-images/drop-images.component';
+import { DropImagesComponent } from './parts/drop-images/drop-images.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    RenketsuComponent,
+    MainComponent,
     DropImagesComponent
   ],
   imports: [

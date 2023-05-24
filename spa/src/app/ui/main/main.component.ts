@@ -2,15 +2,14 @@ import { Component, NgZone, OnInit } from '@angular/core';
 import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import {  canvasToBlob } from '../logic/image-func';
-import { join } from './stitch';
+import { canvasToBlob, join } from './stitch';
 
 @Component({
-  selector: 'app-renketsu',
-  templateUrl: './renketsu.component.html',
-  styleUrls: ['./renketsu.component.scss']
+  selector: 'app-main',
+  templateUrl: './main.component.html',
+  styleUrls: ['./main.component.scss']
 })
-export class RenketsuComponent implements OnInit {
+export class MainComponent implements OnInit {
   app_ver = (window as any)['app_ver'] ?? '';
 
   options = {

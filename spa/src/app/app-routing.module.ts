@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { RenketsuComponent } from './renketsu/renketsu.component';
+import { MainComponent } from './ui/main/main.component';
 
 
 const routes: Routes = [
-  { path: '', component: RenketsuComponent },
+  { path: '', component: MainComponent },
 ];
 
 @NgModule({

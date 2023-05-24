@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { loadImageAsDataURL } from '../logic/image-func';
+import { loadImageAsDataURL } from '../../ui/main/stitch';
 
 @Component({
   selector: 'app-drop-images',
