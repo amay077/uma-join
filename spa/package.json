@@ -6,7 +6,7 @@
     "start": "ng serve --host 0.0.0.0 --port 4200",
     "start-prod": "ng serve --configuration=production --host 0.0.0.0 --port 4200",
     "build": "ng build",
-    "build-prod": "ng build --configuration production --base-href=./",
+    "build-prod": "node ./script/prebuild.js && ng build --configuration production --base-href=./",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

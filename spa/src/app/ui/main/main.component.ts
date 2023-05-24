@@ -3,6 +3,8 @@ import { saveAs } from 'file-saver';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { canvasToBlob, join } from './stitch';
+import { AppService } from 'src/app/service/app.service';
+import { updateApp } from 'src/app/misc/app-updater';
 
 @Component({
   selector: 'app-main',
@@ -10,7 +12,9 @@ import { canvasToBlob, join } from './stitch';
   styleUrls: ['./main.component.scss']
 })
 export class MainComponent implements OnInit {
-  app_ver = (window as any)['app_ver'] ?? '';
+  app_ver = '';
+  build_at = '';
+  hasUpdate = false;
 
   options = {
     yPos: 55,
@@ -28,8 +32,21 @@ export class MainComponent implements OnInit {
   files: File[] = [];
   private imageBlob: Blob | null = null;
 
-  constructor(router: Router, activatedRoute: ActivatedRoute, private toast: ToastrService, private ngZone: NgZone) {
+  constructor(
+    router: Router,
+    private toast: ToastrService,
+    private ngZone: NgZone,
+    appService: AppService) {
     router.routeReuseStrategy.shouldReuseRoute = () => false;
+
+    this.build_at = appService.build_at;
+
+    appService.checkUpdate().then((hasUpdate) => {
+      this.app_ver = appService.latest_app_version;
+      this.hasUpdate = hasUpdate;
+    });
+
+    this.app_ver = appService.latest_app_version;
 
     const opStr = localStorage.getItem('umajoin-options');
     if (opStr != null) {
@@ -133,6 +150,10 @@ export class MainComponent implements OnInit {
       yPos: 55,
       height: 10,
     };
+  }
+
+  async onUpdateApp() {
+    await updateApp();
   }
 }
 

@@ -25,6 +25,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/version.json",
               "src/assets"
             ],
             "allowedCommonJsDependencies": [
@@ -102,6 +103,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/version.json",
               "src/assets"
             ],
             "styles": [
