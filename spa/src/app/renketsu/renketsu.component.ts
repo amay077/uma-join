@@ -128,6 +128,13 @@ export class RenketsuComponent implements OnInit {
     this.processing = false;
     this.showDetails = false;
   }
+
+  resetOptions() {
+    this.options = {
+      yPos: 55,
+      height: 10,
+    };
+  }
 }
 
 
